@@ -35,7 +35,7 @@ export class StartScene extends Phaser.Scene {
         startButton.on("pointerup", ()=>{
             console.log("transit");
             
-            window.location = "login.html";
+            window.location = "login.jsp";
             // Start menu scene
         })
     }
