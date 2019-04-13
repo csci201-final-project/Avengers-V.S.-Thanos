@@ -113,12 +113,12 @@ export class RoomScene extends Phaser.Scene {
         this.deck_top_index = 0;
         
         // Adds confirm button
-        var confirmButton = this.add.image(this.game.renderer.width * 0.85, this.game.renderer.height * 0.9, "confirm-button");
-        confirmButton.setInteractive({ useHandCursor: true });
-        confirmButton.on("pointerover", ()=>{
+        var drawButton = this.add.image(this.game.renderer.width * 0.85, this.game.renderer.height * 0.9, "confirm-button");
+        drawButton.setInteractive({ useHandCursor: true });
+        drawButton.on("pointerover", ()=>{
             /*alert("hover");*/
         });
-        confirmButton.on("pointerup", ()=>{
+        drawButton.on("pointerup", ()=>{
         	if(this.initialize_hand){
         		this.draw_card(5);
 
@@ -126,25 +126,52 @@ export class RoomScene extends Phaser.Scene {
         	else if(this.num_to_draw === 0){
         		this.draw_card(1);
         	}
-        	
         });
         
+        var playButton = this.add.image(this.game.renderer.width /2, this.game.renderer.height /2, "confirm-button");
+        playButton.setInteractive({ useHandCursor: true });
+
+        playButton.on("pointerup", ()=>{
+        	 if(this.to_play_card === true){
+        		 this.scale_back();
+        		 for(i = 0; i < this.hand_cards.length; i++){
+         			if(this.hand_cards_state[i] === "to play"){
+         				this.hand_cards[i].x = this.game.renderer.width/2;
+         				this.hand_cards[i].y = this.game.renderer.height/2;
+         				this.hand_cards.shift();
+         				this.hand_cards_state.shift();
+         				this.to_play_card = false;
+         			}
+         		}
+        		 for(i = 0; i < this.hand_cards.length; i++){
+        			 this.add_card_click_effect(i);
+        		 }
+        	 }
+        });
+      
+        
         this.thanos.on("pointerup", ()=>{
-        	alert("Playing cards.");
         	var i;
     		for(i = 0; i < this.hand_cards.length; i++){
-    			if(this.hand_cards_state[i] === "out"){
+    			/*if(this.hand_cards_state[i] === "out"){
     				this.hand_cards[i].x = this.game.renderer.width/2;
     				this.hand_cards[i].y = this.game.renderer.height/2;
     				this.hand_cards.shift();
     				this.hand_cards_state[i].shift();
+    			}*/
+    			if(this.hand_cards_state[i] === "to play"){
+    				this.to_play_card = true;
+    				alert("You selected Thanos.");
+    	        	this.thanos.setScale(1.5);
     			}
     		}
         });
-        
-       
-        
     }
+    
+    scale_back(){
+    	this.thanos.setScale(1);
+    }
+    
     draw_card(num){
     	if(this.hand_cards.length + num > 5){
     		alert("You already have 5 cards. You can not draw any more cards!");
@@ -165,19 +192,49 @@ export class RoomScene extends Phaser.Scene {
     }
     
     add_card_click_effect(i){
-/*    	alert("adding effect: " + i);*/
-    	/*alert(this.hand_cards_state[i]);*/
 		 this.hand_cards[i].on("pointerup", ()=>{
-			/* alert(cnt);*/
 			if(this.hand_cards_state[i] === "hand"){
 				this.hand_cards[i].y = 533.4;
+				for(var j = 0; j < this.hand_cards.length; j++){
+					if(j != i){
+						this.hand_cards[j].y = 533.4 + 100;
+						this.hand_cards_state[j] = "hand";
+					}
+				}
+				this.hand_cards_state[i] = "to play";
 			}
 			else if(this.hand_cards_state[i] === "to play"){
 				this.hand_cards[i].y = 533.4 + 100;
+				this.hand_cards_state[i] = "hand";
 			}
 			
 		 });
     }
+    
+    /*add_card_click_effect(j){
+    	alert("j: " + j);
+    	var i;
+    	for(i = 0; i < this.hand_cards.length; i++){
+    		this.hand_cards[i].on("pointerup", ()=>{
+    			alert("i: " + i);
+    			if(this.hand_cards_state[i] === "hand"){
+    				this.hand_cards[i].y = 533.4;
+    				for(var j = 0; j < this.hand_cards.length; j++){
+    					if(j != i){
+    						this.hand_cards[j].y = 533.4 + 100;
+    						this.hand_cards_state[j] = "hand";
+    					}
+    				}
+    				this.hand_cards_state[i] = "to play";
+    			}
+    			else if(this.hand_cards_state[i] === "to play"){
+    				this.hand_cards[i].y = 533.4 + 100;
+    				this.hand_cards_state[i] = "hand";
+    			}
+    		 });
+    	}
+		 
+   }*/
     
     update() {
     	this.textValue.text = (this.updateCount++).toString();
@@ -206,8 +263,6 @@ export class RoomScene extends Phaser.Scene {
                      	}
                  	 }
         		}
-        		
-            	
         	}
     	}
     	
