@@ -17,6 +17,8 @@ export class RoomScene extends Phaser.Scene {
 
         // Initializes member variables
         this.isThanos = false;
+        this.gameEnd = false;
+        this.isDead = false;
         this.isLoaded = false;  // Flag indicating succesfull loading page info
         this.handcard = [];
         this.hero = "";
@@ -24,7 +26,7 @@ export class RoomScene extends Phaser.Scene {
         this.attack = 0;
         this.blood = 0;
         
-        this.others = [];
+        this.players = [];
 
         this.cardSprite = null;
         this.target = 500;
@@ -46,6 +48,15 @@ export class RoomScene extends Phaser.Scene {
             if (obj.TYPE === "GAMESTART") {
                 self.parseGameStart(obj);
             }
+            else if (obj.TYPE === "TURNSTART") {
+                self.parseTurnStart(obj);
+            }
+            else if (obj.TYPE === "DODGE") {
+                self.parseDodge(obj);
+            }
+            else if (obj.TYPE === "TAKEDAMAGE") {
+                self.parseTakeDamage(obj);
+            }
         }
         this.socket.onclose = function(event) {
             console.log("Connection lost.");
@@ -65,25 +76,64 @@ export class RoomScene extends Phaser.Scene {
 
         var idx;
         for (idx = 0; idx < 4; idx++) {
-            if (idx !== this.playerID) {
-                var tempObj = {
-                    attack  : obj.ATTACK[idx],
-                    hero    : obj.CHARACTER[idx],
-                    stone   : obj.STONE[idx],
-                    blood   : obj.BLOOD[idx]
-                }
-                this.others.push(tempObj);
+            var tempObj = {
+                attack  : obj.ATTACK[idx],
+                hero    : obj.CHARACTER[idx],
+                stone   : obj.STONE[idx],
+                blood   : obj.BLOOD[idx],
+                handsize: obj.HANDCARD[idx].length
             }
+            this.players.push(tempObj);
         }
         // console.log("attack: ", this.attack);
         // console.log("hero: ", this.hero);
-        console.log(this.others[2].hero);
+        console.log(this.players[2].hero);
         this.isLoaded = true;
     }
 
     parseTurnStart(obj) {
-        this.availableCards = obj.AVAILABLECARDS;
+        if (obj.INDEX === this.playerID) {
+            this.availableCards = obj.AVAILABLECARDS;
+            this.stone = obj.STONE;
+            this.handcard = obj.HANDCARD;
+        }
+        else {
+            this.players[obj.INDEX].handsize = obj.HANDCARD.length;
+        }
+    }
 
+    parseDodge(obj) {
+        if (obj.SOURCE.INDEX === this.playerID) {
+            this.handcard = obj.SOURCE.HANDCARD;
+        }
+        else if (obj.TARGET.INDEX === this.playerID) {
+            this.availableCards = obj.TARGET.AVAILABLECARDS;
+        }
+        this.players[obj.SOURCE.INDEX].handsize = obj.SOURCE.HANDCARD.length;
+    }
+
+    parseTakeDamage(obj) {
+        if (obj.SOURCE.INDEX === this.playerID) {
+            this.stone = obj.SOURCE.STONE;
+            this.availableCards = obj.SOURCE.AVAILABLECARDS;
+        }
+        else if (obj.TARGET.INDEX === this.playerID) {
+            this.handcard = obj.TARGET.HANDCARD;
+            this.blood = obj.TARGET.BLOOD;
+            if (obj.TARGET.GAMEEND === "FALSE") {
+                this.gameEnd = false;
+            }
+            else {
+                this.gameEnd = true;
+            }
+            if (obj.TARGET.ISDEAD === "FALSE") {
+                this.isDead = false;
+            }
+            else {
+                this.isDead = true;
+            }
+        }
+        this.players[obj.TARGET.INDEX].handsize = obj.TARGET.HANDCARD.length;
     }
 
     init() {
