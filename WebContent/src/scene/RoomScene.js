@@ -43,14 +43,19 @@ export class RoomScene extends Phaser.Scene {
         this.load.image("bottom-bar", "./assets/bottom-bar.png");
         this.load.image("teammate", "./assets/teammates.png");
         this.load.image("thanos", "./assets/thanos.png");
-        this.load.image("card-sample_1", "./assets/card-sample_1.png");
-        this.load.image("card-sample_2", "./assets/card-sample_2.png");
-        this.load.image("card-sample_3", "./assets/card-sample_3.png");
-        this.load.image("card-sample_4", "./assets/card-sample_4.png");
-        this.load.image("card-sample_5", "./assets/card-sample_5.png");
-        this.load.image("card-sample_6", "./assets/card-sample_5.png");
-        this.load.image("card-sample_7", "./assets/card-sample_5.png");
-        this.load.image("card-sample_8", "./assets/card-sample_5.png");
+        
+        
+        this.load.image("card_deck", "./assets/card_deck.png");
+        this.load.image("steal", "./assets/steal.jpg");
+        
+        
+        this.load.image("card-sample_2", "./assets/steal.jpg");
+        this.load.image("card-sample_3", "./assets/attack.jpg");
+        this.load.image("card-sample_4", "./assets/dodge.jpg");
+        this.load.image("card-sample_5", "./assets/steal.jpg");
+        this.load.image("card-sample_6", "./assets/resist.jpg");
+        this.load.image("card-sample_7", "./assets/attack.jpg");
+        this.load.image("card-sample_8", "./assets/resist.jpg");
         this.load.image("discard_place", "./assets/card-sample_5.png");
 
     }
@@ -80,19 +85,21 @@ export class RoomScene extends Phaser.Scene {
         });*/
         
         var i
-        for(i = 0; i < 11; i++){
-        	
-        }
-        this.cardSprite_1 = this.physics.add.sprite(1200, 633.4, "card-sample_1").setInteractive();
         
-        this.cardSprite_2 = this.physics.add.sprite(1202, 633.4, "card-sample_2").setInteractive();
-        this.cardSprite_3 = this.physics.add.sprite(1204, 633.4, "card-sample_3").setInteractive();
-        this.cardSprite_4 = this.physics.add.sprite(1206, 633.4, "card-sample_4").setInteractive();
-        this.cardSprite_5 = this.physics.add.sprite(1208, 633.4, "card-sample_5").setInteractive();
-        this.cardSprite_6 = this.physics.add.sprite(1208, 633.4, "card-sample_6").setInteractive();
-        this.cardSprite_7 = this.physics.add.sprite(1208, 633.4, "card-sample_7").setInteractive();
-        this.cardSprite_8 = this.physics.add.sprite(1208, 633.4, "card-sample_8").setInteractive();
+        this.basic_scale = 0.15;
+        this.physics.add.sprite(1200, 633.4, "card_deck").setScale(1.2).depth = 30;
+        this.steal = this.physics.add.sprite(1200, 633.4, "steal").setInteractive().setScale(this.basic_scale);
+
+        this.cardSprite_1 = this.physics.add.sprite(1200, 633.4, "card-sample_2").setInteractive().setScale(this.basic_scale);
+        this.cardSprite_2 = this.physics.add.sprite(1202, 633.4, "card-sample_2").setInteractive().setScale(this.basic_scale);
+        this.cardSprite_3 = this.physics.add.sprite(1204, 633.4, "card-sample_3").setInteractive().setScale(this.basic_scale);
+        this.cardSprite_4 = this.physics.add.sprite(1206, 633.4, "card-sample_4").setInteractive().setScale(this.basic_scale);
+        this.cardSprite_5 = this.physics.add.sprite(1208, 633.4, "card-sample_5").setInteractive().setScale(this.basic_scale);
+        this.cardSprite_6 = this.physics.add.sprite(1208, 633.4, "card-sample_6").setInteractive().setScale(this.basic_scale);
+        this.cardSprite_7 = this.physics.add.sprite(1208, 633.4, "card-sample_7").setInteractive().setScale(this.basic_scale);
+        this.cardSprite_8 = this.physics.add.sprite(1208, 633.4, "card-sample_8").setInteractive().setScale(this.basic_scale);
         
+        this.card_deck.push(this.steal);
         this.card_deck.push(this.cardSprite_1);
         this.card_deck.push(this.cardSprite_2);
         this.card_deck.push(this.cardSprite_3);
@@ -128,7 +135,7 @@ export class RoomScene extends Phaser.Scene {
         	}
         });
         
-        var playButton = this.add.image(this.game.renderer.width /2, this.game.renderer.height /2, "confirm-button");
+        var playButton = this.add.image(this.game.renderer.width /2, this.game.renderer.height /2, "confirm-button").depth = 30;
         playButton.setInteractive({ useHandCursor: true });
 
         playButton.on("pointerup", ()=>{
@@ -159,9 +166,35 @@ export class RoomScene extends Phaser.Scene {
         	var i;
     		for(i = 0; i < this.hand_cards.length; i++){
     			if(this.hand_cards_state[i] === "to play"){
+    				//only when to_play_card is true can we play the cards by pressing the button
     				this.to_play_card = true;
     				alert("You selected Thanos.");
+    				this.scale_back();
     	        	this.thanos.setScale(1.5);
+    			}
+    		}
+        });
+        
+        this.teammateL.on("pointerup", ()=>{
+        	var i;
+    		for(i = 0; i < this.hand_cards.length; i++){
+    			if(this.hand_cards_state[i] === "to play"){
+    				this.to_play_card = true;
+    				alert("You selected teammateL.");
+    				this.scale_back();
+    	        	this.teammateL.setScale(1.5);
+    			}
+    		}
+        });
+        
+        this.teammateR.on("pointerup", ()=>{
+        	var i;
+    		for(i = 0; i < this.hand_cards.length; i++){
+    			if(this.hand_cards_state[i] === "to play"){
+    				this.to_play_card = true;
+    				alert("You selected teammateR.");
+    				this.scale_back();
+    	        	this.teammateR.setScale(1.5);
     			}
     		}
         });
@@ -177,6 +210,8 @@ export class RoomScene extends Phaser.Scene {
     
     scale_back(){
     	this.thanos.setScale(1);
+    	this.teammateL.setScale(1);
+    	this.teammateR.setScale(1);
     }
     
     draw_card(num){
@@ -198,35 +233,62 @@ export class RoomScene extends Phaser.Scene {
     
     }
     
-    add_card_click_effect(i){
+/*    add_card_click_effect(i){
     	var x = this.hand_cards[i].x;
         var y = this.hand_cards[i].y;
+        alert(this.hand_cards[i].type);
+        
         this.hand_cards[i].destroy();
-        this.hand_cards[i] = this.physics.add.sprite(x, y, "card-sample_4");
+        this.hand_cards[i] = this.physics.add.sprite(x, y, "steal").setScale(this.basic_scale);
         this.hand_cards[i].setInteractive();
 		 this.hand_cards[i].on("pointerup", ()=>{
-/*			 alert("i: " + i);
-			 alert("state: " + this.hand_cards_state[i]);*/
 			 if(this.hand_cards_state[i] === "hand"){
 				this.hand_cards[i].y = 533.4;
+				this.hand_cards[i].setScale(this.basic_scale * 1.2);
 				for(var j = 0; j < this.hand_cards.length; j++){
 					if(j != i){
 						this.hand_cards[j].y = 533.4 + 100;
 						this.hand_cards_state[j] = "hand";
+						this.hand_cards[j].setScale(this.basic_scale);
 					}
 				}
 				this.hand_cards_state[i] = "to play";
 			 }
 			 else if(this.hand_cards_state[i] === "to play"){
+				this.hand_cards[i].setScale(this.basic_scale);
 				this.hand_cards[i].y = 533.4 + 100;
 				this.hand_cards_state[i] = "hand";
 			 }
 			
 		 });
-		 /*this.hand_cards[i].on("pointerup", function(i){
-			 alert("i: " + i);
-		 });*/
+    }*/
+    
+    add_card_click_effect(i){
+    	this.hand_cards[i].off("pointerup");
+    	
+		 this.hand_cards[i].on("pointerup", ()=>{
+			 if(this.hand_cards_state[i] === "hand"){
+				this.hand_cards[i].y = 533.4;
+				this.hand_cards[i].setScale(this.basic_scale * 1.2);
+				for(var j = 0; j < this.hand_cards.length; j++){
+					if(j != i){
+						this.hand_cards[j].y = 533.4 + 100;
+						this.hand_cards_state[j] = "hand";
+						this.hand_cards[j].setScale(this.basic_scale);
+					}
+				}
+				this.hand_cards_state[i] = "to play";
+			 }
+			 else if(this.hand_cards_state[i] === "to play"){
+				this.hand_cards[i].setScale(this.basic_scale);
+				this.hand_cards[i].y = 533.4 + 100;
+				this.hand_cards_state[i] = "hand";
+			 }
+			
+		 });
+		 
     }
+    
     
 
     
