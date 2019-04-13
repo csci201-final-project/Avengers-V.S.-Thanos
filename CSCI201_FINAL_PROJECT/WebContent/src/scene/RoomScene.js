@@ -17,7 +17,7 @@ export class RoomScene extends Phaser.Scene {
 
         // Initializes member variables
         this.isThanos = false;
-        this.isLoaded = false;
+        this.isLoaded = false;  // Flag indicating succesfull loading page info
         this.handcard = [];
         this.hero = "";
         this.stone = [];
@@ -30,7 +30,6 @@ export class RoomScene extends Phaser.Scene {
         this.target = 500;
 
         this.socket = new WebSocket("ws://localhost:8080/Test_Phaser/server");
-
 
         var self = this;  // Allows access to "this"
 

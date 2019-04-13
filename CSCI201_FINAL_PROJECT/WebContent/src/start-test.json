@@ -1,0 +1,203 @@
+GAMESTART Back-to-Front:
+{
+    "ATTACK": [
+        2,
+        4,
+        4,
+        3
+    ],
+    "CHARACTER": [
+        "Thor",
+        "ScarletWitch",
+        "Thanos",
+        "DoctorStrange"
+    ],
+    "STONE": [
+        ["SoulStone"],
+        [],
+        [],
+        []
+    ],
+    "TYPE": "GAMESTART",
+    "HANDCARD": [
+        [
+            "ATTACK",
+            "ATTACK",
+            "STEAL"
+        ],
+        [
+            "STEAL",
+            "DODGE",
+            "STEAL",
+            "STEAL"
+        ],
+        [
+            "ATTACK",
+            "DODGE",
+            "STEAL",
+            "UNDEFEATABLE",
+            "ATTACK"
+        ],
+        [
+            "DODGE",
+            "DODGE",
+            "STEAL",
+            "UNDEFEATABLE"
+        ]
+    ],
+    "BLOOD": [
+        6,
+        4,
+        15,
+        5
+    ]
+}
+
+
+GAMESTART Front-to-Back:
+TURNSTART Back-to-Front:
+{
+    "AVAILABLECARDS": [
+        0,
+        2,
+        4
+    ],
+    "INDEX": 2,
+    "STONE": ["TimeStone"],
+    "TYPE": "TURNSTART",
+    "HANDCARD": [
+        "ATTACK",
+        "DODGE",
+        "STEAL",
+        "UNDEFEATABLE",
+        "ATTACK",
+        "UNDEFEATABLE"
+    ]
+}
+
+
+PLAYEREND Front-to-Back:
+{
+    "TARGET": 2,
+    "TYPE": "PLAYEREND",
+    "GAMEID": 123
+}
+TURNSTART Back-to-Front:
+{
+    "AVAILABLECARD": [
+        2,
+        4
+    ],
+    "INDEX": 3,
+    "STONE": [],
+    "TYPE": "TURNSTART",
+    "HANDCARD": [
+        "DODGE",
+        "DODGE",
+        "STEAL",
+        "UNDEFEATABLE",
+        "ATTACK"
+    ]
+}
+
+// An instance with target dodged
+ATTACK Front-to-Back:
+{"TARGET":2,"SOURCE":2,"TYPE":"ATTACK","GAMEID":123,"CARD":0}
+
+DODGE Back-to-Front:
+{
+    "TARGET": {
+        "AVAILABLECARDS": [0],
+        "INDEX": 2
+    },
+    "SOURCE": {
+        "INDEX": 2,
+        "HANDCARDS": [
+            "DODGE",
+            "STEAL",
+            "UNDEFEATABLE",
+            "ATTACK",
+            "UNDEFEATABLE"
+        ]
+    },
+    "TYPE": "DODGE"
+}
+
+
+DODGE Front-to-Back:
+{"TARGET":2,"SOURCE":3,"TYPE":"DODGE","GAMEID":123,"CARD":0}
+
+TAKEDAMAGE Forward String:
+{
+    "TARGET": {
+        "INDEX": 2,
+        "GAMEEND": "FALSE",
+        "ISDEAD": "FALSE",
+        "HANDCARD": [
+            "DODGE",
+            "STEAL",
+            "UNDEFEATABLE",
+            "ATTACK",
+            "UNDEFEATABLE"
+        ],
+        "BLOOD": 15
+    },
+    "SOURCE": {
+        "AVAILABLECARDS": [1],
+        "INDEX": 3,
+        "STONE": []
+    },
+    "TYPE": "TAKEDAMAGE"
+}
+
+
+
+// An instance with target doesn’t dodge
+ATTACK Front-to-Back:
+{"TARGET":2,"SOURCE":0,"TYPE":"ATTACK","GAMEID":123,"CARD":0}
+
+DODGE Back-to-Front:
+{
+    "TARGET": {
+        "AVAILABLECARDS": [0],
+        "INDEX": 2
+    },
+    "SOURCE": {
+        "INDEX": 0,
+        "HANDCARDS": [
+            "ATTACK",
+            "STEAL"
+        ]
+    },
+    "TYPE": "DODGE"
+}
+
+
+DODGE Front-to-Back:
+{"TARGET":2,"SOURCE":0,"TYPE":"DODGE","GAMEID":123,"CARD":-1}
+
+TAKEDAMAGE Forward String:
+{
+    "TARGET": {
+        "INDEX": 2,
+        "GAMEEND": "FALSE",
+        "ISDEAD": "FALSE",
+        "HANDCARD": [
+            "DODGE",
+            "STEAL",
+            "UNDEFEATABLE",
+            "ATTACK",
+            "UNDEFEATABLE"
+        ],
+        "BLOOD": 13
+    },
+    "SOURCE": {
+        "AVAILABLECARDS": [1],
+        "INDEX": 0,
+        "STONE": ["SoulStone"]
+    },
+    "TYPE": "TAKEDAMAGE"
+}
+
+
+

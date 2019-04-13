@@ -8,13 +8,16 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Login</title>
+		<link rel="icon" href="./assets/favicon.png">
 		<style>
 			
 		
 		</style>
 		
 		<script>
-
+			function validateForm() {
+				return true;
+			}
 			
 		
 		</script>		
@@ -30,9 +33,9 @@
 		<div style="padding-left:16px">
 		 	<div class="form animated flipInX">
 			  <h2>Welcome To The Avengers</h2>
-			  <form>
-			    <input placeholder="Username" type="text"></input>
-			    <input placeholder="Password" type="password"></input>
+			  <form method="GET" action="./roomSelect.jsp" onSubmit="return validateForm()">
+			    <input placeholder="Username" type="text" name="username"></input>
+			    <input placeholder="Password" type="password" name="password"></input>
 			<button>Login</button>
 			</form>
 			</div>
