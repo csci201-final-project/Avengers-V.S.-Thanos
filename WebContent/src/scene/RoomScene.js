@@ -14,7 +14,9 @@ export class RoomScene extends Phaser.Scene {
         this.moveFlag = false;
         this.cardSprite = null;
         this.target = 500;
-
+       
+        
+        
        /* this.socket = new WebSocket("ws://localhost:8080/Test_Phaser/server");
 
         // Overwrite same function as server, asynchronous
@@ -30,6 +32,7 @@ export class RoomScene extends Phaser.Scene {
         this.socket.onclose = function(event) {
             console.log("Connection lost.");
         }*/
+        
     }
 
     init() {
@@ -57,6 +60,9 @@ export class RoomScene extends Phaser.Scene {
         this.load.image("card-sample_7", "./assets/attack.jpg");
         this.load.image("card-sample_8", "./assets/resist.jpg");
         this.load.image("discard_place", "./assets/card-sample_5.png");
+        
+        this.load.image("left_heart", "./assets/left_heart.png");
+        this.load.image("right_heart", "./assets/right_heart.png");
 
     }
 
@@ -70,25 +76,34 @@ export class RoomScene extends Phaser.Scene {
        	this.teammateL = this.add.image(100, 300, "teammate").setInteractive();
         this.teammateR = this.add.image(this.game.renderer.width - 100, 300, "teammate").setInteractive();
         this.thanos = this.add.image(this.game.renderer.width/2, 130, "thanos").setInteractive();
-        /*this.discard_place = this.add.image(this.game.renderer.width/2, this.game.renderer.height/2, "discard_place");*/
+        
         
         //Theo's testing
+        this.MAX_HEALTH = 7;
         this.hand_cards = [];
         this.card_deck = [];
         this.hand_cards_state = [];
+        this.health_bar = [];
+
+        for(var i = 0; i < this.MAX_HEALTH; i++){
+        	if(i % 2 === 0){
+        		var heart = this.add.image(60 + i * 37, 705, "left_heart").setScale(0.23);
+        		this.health_bar.push(heart);
+        	}
+        	else{
+        		var heart = this.add.image(60 + (i-1) * 37, 705, "right_heart").setScale(0.23);
+        		this.health_bar.push(heart);
+        	}
+        }
         
-/*        stars = this.physics.add.group({
-            key: 'HANDCARD',
-            repeat: 11,
-            
-            setXY: { x: 1202, y: 633.4, stepX: 2 }
-        });*/
+        var i;
         
-        var i
         
         this.basic_scale = 0.15;
+        
         this.physics.add.sprite(1200, 633.4, "card_deck").setScale(1.2).depth = 30;
-        this.steal = this.physics.add.sprite(1200, 633.4, "steal").setInteractive().setScale(this.basic_scale);
+        this.discard_place = this.add.image(this.game.renderer.width/2, this.game.renderer.height/2, "discard_place");
+        this.discard_place.setScale(1.2).depth = 30;
 
         this.cardSprite_1 = this.physics.add.sprite(1200, 633.4, "card-sample_2").setInteractive().setScale(this.basic_scale);
         this.cardSprite_2 = this.physics.add.sprite(1202, 633.4, "card-sample_2").setInteractive().setScale(this.basic_scale);
@@ -99,7 +114,7 @@ export class RoomScene extends Phaser.Scene {
         this.cardSprite_7 = this.physics.add.sprite(1208, 633.4, "card-sample_7").setInteractive().setScale(this.basic_scale);
         this.cardSprite_8 = this.physics.add.sprite(1208, 633.4, "card-sample_8").setInteractive().setScale(this.basic_scale);
         
-        this.card_deck.push(this.steal);
+
         this.card_deck.push(this.cardSprite_1);
         this.card_deck.push(this.cardSprite_2);
         this.card_deck.push(this.cardSprite_3);
@@ -109,7 +124,7 @@ export class RoomScene extends Phaser.Scene {
         this.card_deck.push(this.cardSprite_7);
         this.card_deck.push(this.cardSprite_8);
         
-
+        
 
         var style = { font: "65px Arial", fill: "#ff0000", align: "center" };
         this.textValue = this.add.text(0, 0, "0", style);
@@ -135,14 +150,14 @@ export class RoomScene extends Phaser.Scene {
         	}
         });
         
-        var playButton = this.add.image(this.game.renderer.width /2, this.game.renderer.height /2, "confirm-button").depth = 30;
+        var playButton = this.add.image(this.game.renderer.width /2, this.game.renderer.height /2, "confirm-button");
         playButton.setInteractive({ useHandCursor: true });
+        playButton.depth = 30;
 
         playButton.on("pointerup", ()=>{
         	 if(this.to_play_card === true){
         		 this.scale_back();
         		 var index =  this.hand_cards_state.indexOf("to play");
-        		 alert("to play index: " + index);
         		 this.hand_cards[index].x = this.game.renderer.width/2;
   				 this.hand_cards[index].y = this.game.renderer.height/2;
   				this.hand_cards[index].removeInteractive();
@@ -155,7 +170,6 @@ export class RoomScene extends Phaser.Scene {
   				 this.to_play_card = false;
   				 
         		 for(i = 0; i < this.hand_cards.length; i++){
-        			 
         			 this.add_card_click_effect(i, true);
         		 }
         	 }
@@ -233,35 +247,19 @@ export class RoomScene extends Phaser.Scene {
     
     }
     
-/*    add_card_click_effect(i){
-    	var x = this.hand_cards[i].x;
-        var y = this.hand_cards[i].y;
-        alert(this.hand_cards[i].type);
-        
-        this.hand_cards[i].destroy();
-        this.hand_cards[i] = this.physics.add.sprite(x, y, "steal").setScale(this.basic_scale);
-        this.hand_cards[i].setInteractive();
-		 this.hand_cards[i].on("pointerup", ()=>{
-			 if(this.hand_cards_state[i] === "hand"){
-				this.hand_cards[i].y = 533.4;
-				this.hand_cards[i].setScale(this.basic_scale * 1.2);
-				for(var j = 0; j < this.hand_cards.length; j++){
-					if(j != i){
-						this.hand_cards[j].y = 533.4 + 100;
-						this.hand_cards_state[j] = "hand";
-						this.hand_cards[j].setScale(this.basic_scale);
-					}
-				}
-				this.hand_cards_state[i] = "to play";
-			 }
-			 else if(this.hand_cards_state[i] === "to play"){
-				this.hand_cards[i].setScale(this.basic_scale);
-				this.hand_cards[i].y = 533.4 + 100;
-				this.hand_cards_state[i] = "hand";
-			 }
-			
-		 });
-    }*/
+    
+    //num represents the health you want the hero to have
+    set_health(num){
+    	if(num > this.MAX_HEALTH){
+    		alert("The Health You Want To Set Exceeds The Hero's Max Health!");
+    	}
+    	for(var i = 0; i < num; i++){
+    		this.health_bar[i].visible = true;
+    	}
+    	for(var i = num; i < this.MAX_HEALTH; i++){
+    		this.health_bar[i].visible = false;
+    	}
+    }
     
     add_card_click_effect(i){
     	this.hand_cards[i].off("pointerup");
@@ -298,17 +296,17 @@ export class RoomScene extends Phaser.Scene {
        		return;
        	}
        	
-       	
+      
        	
     	if(this.draw_more_cards){
     		var i;
         	for(i = 0; i < this.hand_cards.length; i++){
         		var cardSprite = this.hand_cards[i];
-        		var dist = 122.5;
+        		var dist = 122.7;
         		if(this.draw_more_cards === true){
-        			if(cardSprite.x < (400 + i*dist)){
+        			if(cardSprite.x < (401 + i*dist)){
                      	cardSprite.body.setVelocityX(0);
-                     	cardSprite.x = 400 + i*dist;
+                     	cardSprite.x = 401 + i*dist;
                      	this.num_to_draw--;
                      	this.hand_cards_state[i] = "hand";
                      	this.add_card_click_effect(i, false);
