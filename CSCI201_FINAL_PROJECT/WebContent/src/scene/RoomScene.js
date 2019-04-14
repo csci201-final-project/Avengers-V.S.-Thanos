@@ -25,6 +25,9 @@ export class RoomScene extends Phaser.Scene {
         this.stone = [];
         this.attack = 0;
         this.blood = 0;
+        this.leftID;
+        this.rightID;
+        this.topID;
         
         this.players = [];
 
@@ -186,7 +189,7 @@ export class RoomScene extends Phaser.Scene {
         
         // Adds empty hero pics
         this.hero_base_scale = 0.75;
-        this.add.image(200, 550, "undecided").setScale(0.85);
+        this.myHeroPic = this.add.image(200, 550, "undecided").setScale(0.85);
        	this.teammateL = this.add.image(100 + 30, 300, "undecided").setInteractive().setScale(this.hero_base_scale = 0.75);
         this.teammateR = this.add.image(this.game.renderer.width - 115, 300, "undecided").setInteractive().setScale(this.hero_base_scale = 0.75);
         this.teammateT = this.add.image(this.game.renderer.width/2, 130, "undecided").setInteractive().setScale(this.hero_base_scale = 0.75);
@@ -303,8 +306,7 @@ export class RoomScene extends Phaser.Scene {
         		this.draw_card(1);
         	}
         });
-/*        alert("center width: " + this.game.renderer.width);
-        alert("center height: " + this.game.renderer.height);*/
+
         var confirmButton = this.add.image(this.game.renderer.width - 116, this.game.renderer.height - 170, "confirm-button").setScale(0.42);
         confirmButton.setInteractive({ useHandCursor: true });
         confirmButton.depth = 30;
@@ -472,16 +474,17 @@ export class RoomScene extends Phaser.Scene {
         this.teammateL.destroy();
         this.teammateT.destroy();
         this.teammateR.destroy();
+        this.myHeroPic.destroy();
 
-        var leftID, topID, rightID;
+        
         // Adds images
-        this.add.image(200, 550, this.hero).setScale(0.85);
+        this.myHeroPic = this.add.image(200, 550, this.hero).setScale(0.85);
         if (!this.isThanos) {
             var leftFlag = false;
             this.teammateT = this.add.image(this.game.renderer.width/2, 130, "Thanos").setInteractive().setScale(this.hero_base_scale = 0.75);
             for (var i = 0; i < 4; i++) {
                 if (this.players[i].hero === "Thanos") {
-                    topID = i;
+                    this.topID = i;
                 }
                 else if (i !== this.playerID) {
                     if (!leftFlag) {
@@ -490,7 +493,7 @@ export class RoomScene extends Phaser.Scene {
                         leftFlag = true;
                     }
                     else {
-                        rightID = i;
+                        this.rightID = i;
                         this.teammateR = this.add.image(this.game.renderer.width - 115, 300, this.players[i].hero).setInteractive().setScale(this.hero_base_scale = 0.75);
                     }
                 }
@@ -498,22 +501,22 @@ export class RoomScene extends Phaser.Scene {
         }
         else {
             var i = 0;
-            if (this.players[i] === "Thanos") {
+            if (this.players[i].hero === "Thanos") {
                 i++;
             }
-            leftID = i;
+            this.leftID = i;
             this.teammateL = this.add.image(100 + 30, 300, this.players[i].hero).setInteractive().setScale(this.hero_base_scale = 0.75);
             i++;
-            if (this.players[i] === "Thanos") {
+            if (this.players[i].hero === "Thanos") {
                 i++;
             }
-            topID = i;
+            this.topID = i;
             this.teammateT = this.add.image(this.game.renderer.width/2, 130, this.players[i].hero).setInteractive().setScale(this.hero_base_scale = 0.75);
             i++;
-            if (this.players[i] === "Thanos") {
+            if (this.players[i].hero === "Thanos") {
                 i++;
             }
-            rightID = i;
+            this.rightID = i;
             this.teammateR = this.add.image(this.game.renderer.width - 115, 300, this.players[i].hero).setInteractive().setScale(this.hero_base_scale = 0.75);
         }
 
@@ -524,7 +527,7 @@ export class RoomScene extends Phaser.Scene {
     			if(this.hand_cards_state[i] === "to play"){
     				//only when to_play_card is true can we play the cards by pressing the button
     				this.to_play_card = true;
-    				alert("You selected " + topID + ":" + this.players[topID].hero);
+    				alert("You selected " + this.topID + ":" + this.players[this.topID].hero);
     				this.scale_back();
     	        	this.teammateT.setScale(this.hero_base_scale * 1.2);
     			}
@@ -536,7 +539,7 @@ export class RoomScene extends Phaser.Scene {
     		for(i = 0; i < this.hand_cards.length; i++){
     			if(this.hand_cards_state[i] === "to play"){
     				this.to_play_card = true;
-    				alert("You selected " + leftID + ":" + this.players[leftID].hero);
+    				alert("You selected " + this.leftID + ":" + this.players[this.leftID].hero);
     				this.scale_back();
     	        	this.teammateL.setScale(this.hero_base_scale * 1.2);
     			}
@@ -548,7 +551,7 @@ export class RoomScene extends Phaser.Scene {
     		for(i = 0; i < this.hand_cards.length; i++){
     			if(this.hand_cards_state[i] === "to play"){
     				this.to_play_card = true;
-    				alert("You selected " + rightID + ":" + this.players[rightID].hero);
+    				alert("You selected " + this.rightID + ":" + this.players[this.rightID].hero);
     				this.scale_back();
     	        	this.teammateR.setScale(this.hero_base_scale * 1.2);
     			}
@@ -556,9 +559,9 @@ export class RoomScene extends Phaser.Scene {
         });
 
         // Sets hero health
-        this.set_left_hero_health(this.players[leftID].blood);
-        this.set_right_hero_health(this.players[rightID].blood);
-        this.set_top_hero_health(this.players[topID].blood);
+        this.set_left_hero_health(this.players[this.leftID].blood);
+        this.set_right_hero_health(this.players[this.rightID].blood);
+        this.set_top_hero_health(this.players[this.topID].blood);
         this.set_this_hero_health(this.blood);
     }
 
