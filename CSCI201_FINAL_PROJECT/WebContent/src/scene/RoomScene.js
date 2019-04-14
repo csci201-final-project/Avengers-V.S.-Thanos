@@ -146,14 +146,15 @@ export class RoomScene extends Phaser.Scene {
         this.load.image("my-hero", "./assets/myhero.png");
         this.load.image("bottom-bar", "./assets/bottom-bar.png");
         this.load.image("teammate", "./assets/teammates.png");
+        this.load.image("undecided", "./assets/undecided-hero.png")
 
-        this.load.image("thanos", "./assets/thanos.png");
-        this.load.image("ironman", "./assets/iron-man.png");
-        this.load.image("thor", "./assets/thor.png");
-        this.load.image("hulk", "./assets/hulk.png");
-        this.load.image("antman", "./assets/antman.png");
-        this.load.image("black-widow", "./assets/black-widow.png");
-        this.load.image("captain", "./assets/captain-marvel.png");
+        this.load.image("Thanos", "./assets/thanos.png");
+        this.load.image("IronMan", "./assets/iron-man.png");
+        this.load.image("Thor", "./assets/thor.png");
+        this.load.image("Hulk", "./assets/hulk.png");
+        this.load.image("Antman", "./assets/antman.png");
+        this.load.image("ScarletWitch", "./assets/black-widow.png");
+        this.load.image("DoctorStrange", "./assets/captain-marvel.png");
 
         this.load.image("card_deck", "./assets/card_deck.png");
         this.load.image("card-sample", "./assets/card-sample.png");
@@ -173,25 +174,29 @@ export class RoomScene extends Phaser.Scene {
         this.load.image("end_turn", "./assets/endturn-btn.png");
         this.load.image("left_heart", "./assets/left_heart.png");
         this.load.image("right_heart", "./assets/right_heart.png");
+
+        //DEBUG
+        this.load.image("start-btn", "./assets/start-button.png");
     }
 
     create() {
-        // Add all images
+        // Adds all images
         this.add.image(this.game.renderer.width/2, this.game.renderer.height/2 - 100, "background");
         this.add.image(this.game.renderer.width/2, this.game.renderer.height - 125, "bottom-bar");
         
+        // Adds empty hero pics
         this.hero_base_scale = 0.75;
-        this.add.image(200, 550, "hulk").setScale(0.85);
-       	this.teammateL = this.add.image(100 + 30, 300, "thor").setInteractive().setScale(this.hero_base_scale = 0.75);
-        this.teammateR = this.add.image(this.game.renderer.width - 115, 300, "antman").setInteractive().setScale(this.hero_base_scale = 0.75);
-        this.thanos = this.add.image(this.game.renderer.width/2, 130, "thanos").setInteractive();
+        this.add.image(200, 550, "undecided").setScale(0.85);
+       	this.teammateL = this.add.image(100 + 30, 300, "undecided").setInteractive().setScale(this.hero_base_scale = 0.75);
+        this.teammateR = this.add.image(this.game.renderer.width - 115, 300, "undecided").setInteractive().setScale(this.hero_base_scale = 0.75);
+        this.teammateT = this.add.image(this.game.renderer.width/2, 130, "undecided").setInteractive().setScale(this.hero_base_scale = 0.75);
         
         
         //Theo's testing
-        this.MAX_HEALTH = 7;
-        this.MAX_HEALTH_LEFT = 5;
-        this.MAX_HEALTH_RIGHT = 9;
-        this.MAX_HEALTH_TOP = 15;
+        this.MAX_HEALTH = 14;
+        this.MAX_HEALTH_LEFT = 10;
+        this.MAX_HEALTH_RIGHT = 10;
+        this.MAX_HEALTH_TOP = 14;
         
         this.hand_cards = [];
         this.card_deck = [];
@@ -202,6 +207,7 @@ export class RoomScene extends Phaser.Scene {
         this.health_bar_right = [];
         this.health_bar_top = [];
         
+        // Adds default hero health
         for(var i = 0; i < this.MAX_HEALTH; i++){
         	if(i % 2 === 0){
         		var heart = this.add.image(38 + i * 23, 705 - 20, "left_heart").setScale(0.17);
@@ -246,11 +252,7 @@ export class RoomScene extends Phaser.Scene {
         		this.health_bar_top.push(heart);
         	}
         }
-        
-        
-        
         var i;
-        
         
         this.basic_scale = 0.15;
         this.card_cover_scale = 1.6;
@@ -268,7 +270,6 @@ export class RoomScene extends Phaser.Scene {
         this.cardSprite_7 = this.physics.add.sprite(1208, 633.4, "card-sample_7").setInteractive().setScale(this.basic_scale);
         this.cardSprite_8 = this.physics.add.sprite(1208, 633.4, "card-sample_8").setInteractive().setScale(this.basic_scale);
         
-
         this.card_deck.push(this.cardSprite_1);
         this.card_deck.push(this.cardSprite_2);
         this.card_deck.push(this.cardSprite_3);
@@ -278,8 +279,6 @@ export class RoomScene extends Phaser.Scene {
         this.card_deck.push(this.cardSprite_7);
         this.card_deck.push(this.cardSprite_8);
         
-        
-
         var style = { font: "65px Arial", fill: "#ff0000", align: "center" };
         this.textValue = this.add.text(0, 0, "0", style);
         this.updateCount = 0;
@@ -332,46 +331,26 @@ export class RoomScene extends Phaser.Scene {
         	}
         });
       
-        
-        this.thanos.on("pointerup", ()=>{
-        	var i;
-    		for(i = 0; i < this.hand_cards.length; i++){
-    			if(this.hand_cards_state[i] === "to play"){
-    				//only when to_play_card is true can we play the cards by pressing the button
-    				this.to_play_card = true;
-    				alert("You selected Thanos.");
-    				this.scale_back();
-    	        	this.thanos.setScale(1.5);
-    			}
-    		}
+        var startButton = this.add.image(this.game.renderer.width/2 - 30, this.game.renderer.height/2 - 50, "start-btn");
+        startButton.setInteractive({ useHandCursor: true });
+        startButton.on("pointerup", ()=>{
+            this.socket.send("request");
         });
         
-        this.teammateL.on("pointerup", ()=>{
-        	var i;
-    		for(i = 0; i < this.hand_cards.length; i++){
-    			if(this.hand_cards_state[i] === "to play"){
-    				this.to_play_card = true;
-    				alert("You selected teammateL.");
-    				this.scale_back();
-    	        	this.teammateL.setScale(this.hero_base_scale * 1.2);
-    			}
-    		}
-        });
-        
-        this.teammateR.on("pointerup", ()=>{
-        	var i;
-    		for(i = 0; i < this.hand_cards.length; i++){
-    			if(this.hand_cards_state[i] === "to play"){
-    				this.to_play_card = true;
-    				alert("You selected teammateR.");
-    				this.scale_back();
-    	        	this.teammateR.setScale(this.hero_base_scale * 1.2);
-    			}
-    		}
-        });
 
         // end of create
-        this.socket.send("request");
+    }
+
+    set_this_hero_health(num) {
+        if(num > this.MAX_HEALTH){
+    		alert("The Health You Want To Set Exceeds The Hero's Max Health!");
+    	}
+    	for(var i = 0; i < num; i++){
+    		this.health_bar[i].visible = true;
+    	}
+    	for(var i = num; i < this.MAX_HEALTH; i++){
+    		this.health_bar[i].visible = false;
+    	}
     }
     
     set_left_hero_health(num){
@@ -418,7 +397,7 @@ export class RoomScene extends Phaser.Scene {
     }
     
     scale_back(){
-    	this.thanos.setScale(1);
+    	this.teammateT.setScale(this.hero_base_scale);
     	this.teammateL.setScale(this.hero_base_scale);
     	this.teammateR.setScale(this.hero_base_scale);
     }
@@ -443,52 +422,153 @@ export class RoomScene extends Phaser.Scene {
     
     }
     
-    
-    //num represents the health you want the hero to have
-    set_health(num){
-    	if(num > this.MAX_HEALTH){
-    		alert("The Health You Want To Set Exceeds The Hero's Max Health!");
-    	}
-    	for(var i = 0; i < num; i++){
-    		this.health_bar[i].visible = true;
-    	}
-    	for(var i = num; i < this.MAX_HEALTH; i++){
-    		this.health_bar[i].visible = false;
-    	}
-    }
-    
     add_card_click_effect(i){
-    	this.hand_cards[i].off("pointerup");
-    	
-		 this.hand_cards[i].on("pointerup", ()=>{
-			 if(this.hand_cards_state[i] === "hand"){
-				this.hand_cards[i].y = 533.4;
-				this.hand_cards[i].setScale(this.basic_scale * 1.2);
-				for(var j = 0; j < this.hand_cards.length; j++){
-					if(j != i){
-						this.hand_cards[j].y = 533.4 + 100;
-						this.hand_cards_state[j] = "hand";
-						this.hand_cards[j].setScale(this.basic_scale);
-					}
-				}
-				this.hand_cards_state[i] = "to play";
-			 }
-			 else if(this.hand_cards_state[i] === "to play"){
-				this.hand_cards[i].setScale(this.basic_scale);
-				this.hand_cards[i].y = 533.4 + 100;
-				this.hand_cards_state[i] = "hand";
-			 }
-			
-		 });
-		 
+        this.hand_cards[i].off("pointerdown");
+        this.hand_cards[i].off("pointerover");
+        this.hand_cards[i].off("pointerout");
+        var depth = this.hand_cards[i].depth;
+        this.hand_cards[i].on("pointerdown", ()=>{
+            this.hand_cards[i].depth = depth;
+            if(this.hand_cards_state[i] === "hand"){
+                this.hand_cards[i].y = 533.4;
+                this.hand_cards[i].setScale(this.basic_scale * 1.2);
+                for(var j = 0; j < this.hand_cards.length; j++){
+                    if(j != i){
+                        this.hand_cards[j].y = 533.4 + 100;
+                        this.hand_cards_state[j] = "hand";
+                        this.hand_cards[j].setScale(this.basic_scale);
+                    }
+                }
+                this.hand_cards_state[i] = "to play";
+            }
+            else if(this.hand_cards_state[i] === "to play"){
+                this.hand_cards[i].setScale(this.basic_scale);
+                this.hand_cards[i].y = 533.4 + 100;
+                this.hand_cards_state[i] = "hand";
+            }
+        });
+      
+        this.hand_cards[i].on("pointerover", ()=>{
+            if(this.hand_cards_state[i] === "to play"){
+                return;
+            }
+            this.hand_cards[i].setScale(this.basic_scale * 2);
+            this.hand_cards[i].y = 533.14;
+            this.hand_cards[i].depth = 300;
+        
+        });
+            
+        this.hand_cards[i].on("pointerout", ()=>{
+            if(this.hand_cards_state[i] === "to play"){
+                return;
+            }
+            this.hand_cards[i].setScale(this.basic_scale);
+            this.hand_cards[i].y = 533.4 + 100;
+            this.hand_cards[i].depth = depth;
+        });
+    }
+
+    loadHeroPics() {
+        this.teammateL.destroy();
+        this.teammateT.destroy();
+        this.teammateR.destroy();
+
+        var leftID, topID, rightID;
+        // Adds images
+        this.add.image(200, 550, this.hero).setScale(0.85);
+        if (!this.isThanos) {
+            var leftFlag = false;
+            this.teammateT = this.add.image(this.game.renderer.width/2, 130, "Thanos").setInteractive().setScale(this.hero_base_scale = 0.75);
+            for (var i = 0; i < 4; i++) {
+                if (this.players[i].hero === "Thanos") {
+                    topID = i;
+                }
+                else if (i !== this.playerID) {
+                    if (!leftFlag) {
+                        leftID = i;
+                        this.teammateL = this.add.image(100 + 30, 300, this.players[i].hero).setInteractive().setScale(this.hero_base_scale = 0.75);
+                        leftFlag = true;
+                    }
+                    else {
+                        rightID = i;
+                        this.teammateR = this.add.image(this.game.renderer.width - 115, 300, this.players[i].hero).setInteractive().setScale(this.hero_base_scale = 0.75);
+                    }
+                }
+            }
+        }
+        else {
+            var i = 0;
+            if (this.players[i] === "Thanos") {
+                i++;
+            }
+            leftID = i;
+            this.teammateL = this.add.image(100 + 30, 300, this.players[i].hero).setInteractive().setScale(this.hero_base_scale = 0.75);
+            i++;
+            if (this.players[i] === "Thanos") {
+                i++;
+            }
+            topID = i;
+            this.teammateT = this.add.image(this.game.renderer.width/2, 130, this.players[i].hero).setInteractive().setScale(this.hero_base_scale = 0.75);
+            i++;
+            if (this.players[i] === "Thanos") {
+                i++;
+            }
+            rightID = i;
+            this.teammateR = this.add.image(this.game.renderer.width - 115, 300, this.players[i].hero).setInteractive().setScale(this.hero_base_scale = 0.75);
+        }
+
+        // Adds listeners
+        this.teammateT.on("pointerup", ()=>{
+        	var i;
+    		for(i = 0; i < this.hand_cards.length; i++){
+    			if(this.hand_cards_state[i] === "to play"){
+    				//only when to_play_card is true can we play the cards by pressing the button
+    				this.to_play_card = true;
+    				alert("You selected " + topID + ":" + this.players[topID].hero);
+    				this.scale_back();
+    	        	this.teammateT.setScale(this.hero_base_scale * 1.2);
+    			}
+    		}
+        });
+        
+        this.teammateL.on("pointerup", ()=>{
+        	var i;
+    		for(i = 0; i < this.hand_cards.length; i++){
+    			if(this.hand_cards_state[i] === "to play"){
+    				this.to_play_card = true;
+    				alert("You selected " + leftID + ":" + this.players[leftID].hero);
+    				this.scale_back();
+    	        	this.teammateL.setScale(this.hero_base_scale * 1.2);
+    			}
+    		}
+        });
+        
+        this.teammateR.on("pointerup", ()=>{
+        	var i;
+    		for(i = 0; i < this.hand_cards.length; i++){
+    			if(this.hand_cards_state[i] === "to play"){
+    				this.to_play_card = true;
+    				alert("You selected " + rightID + ":" + this.players[rightID].hero);
+    				this.scale_back();
+    	        	this.teammateR.setScale(this.hero_base_scale * 1.2);
+    			}
+    		}
+        });
+
+        // Sets hero health
+        this.set_left_hero_health(this.players[leftID].blood);
+        this.set_right_hero_health(this.players[rightID].blood);
+        this.set_top_hero_health(this.players[topID].blood);
+        this.set_this_hero_health(this.blood);
     }
 
     update() {
         this.textValue.text = (this.updateCount++).toString();
 
-        // if (this.isLoaded) {
-        //     this.add.image(100, 300, "thanos");
-        // }
+        if (this.isLoaded) {
+            this.loadHeroPics();
+            this.isLoaded = false;
+        }
 
        	if(this.num_to_draw === 0){
        		return;
