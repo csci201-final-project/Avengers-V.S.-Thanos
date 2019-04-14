@@ -1,6 +1,4 @@
-# Avengers vs. Thanos
-
-## CSCI 201 Final Project
+# Avengers vs. Thanos - CSCI 201 Final Project
 
 ## Team Members
 
