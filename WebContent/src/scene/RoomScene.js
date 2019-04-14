@@ -44,9 +44,14 @@ export class RoomScene extends Phaser.Scene {
         this.load.image("confirm-button", "./assets/confirm-btn.png");
         this.load.image("my-hero", "./assets/myhero.png");
         this.load.image("bottom-bar", "./assets/bottom-bar.png");
-        this.load.image("teammate", "./assets/teammates.png");
-        this.load.image("thanos", "./assets/thanos.png");
         
+        this.load.image("thanos", "./assets/thanos.png");
+        this.load.image("ironman", "./assets/iron-man.png");
+        this.load.image("thor", "./assets/thor.png");
+        this.load.image("hulk", "./assets/hulk.png");
+        this.load.image("antman", "./assets/antman.png");
+        this.load.image("black-widow", "./assets/black-widow.png");
+        this.load.image("captain", "./assets/captain-marvel.png");
         
         this.load.image("card_deck", "./assets/card_deck.png");
         this.load.image("steal", "./assets/steal.jpg");
@@ -60,7 +65,7 @@ export class RoomScene extends Phaser.Scene {
         this.load.image("card-sample_7", "./assets/attack.jpg");
         this.load.image("card-sample_8", "./assets/resist.jpg");
         this.load.image("discard_place", "./assets/card-sample_5.png");
-        
+        this.load.image("end_turn", "./assets/endturn-btn.png");
         this.load.image("left_heart", "./assets/left_heart.png");
         this.load.image("right_heart", "./assets/right_heart.png");
 
@@ -71,39 +76,84 @@ export class RoomScene extends Phaser.Scene {
         this.add.image(this.game.renderer.width/2, this.game.renderer.height/2 - 100, "background");
         this.add.image(this.game.renderer.width/2, this.game.renderer.height - 125, "bottom-bar");
         
-        
-        this.add.image(200, 550, "my-hero");
-       	this.teammateL = this.add.image(100, 300, "teammate").setInteractive();
-        this.teammateR = this.add.image(this.game.renderer.width - 100, 300, "teammate").setInteractive();
+        this.hero_base_scale = 0.75;
+        this.add.image(200, 550, "hulk").setScale(0.85);
+       	this.teammateL = this.add.image(100 + 30, 300, "thor").setInteractive().setScale(this.hero_base_scale = 0.75);
+        this.teammateR = this.add.image(this.game.renderer.width - 115, 300, "antman").setInteractive().setScale(this.hero_base_scale = 0.75);
         this.thanos = this.add.image(this.game.renderer.width/2, 130, "thanos").setInteractive();
         
         
         //Theo's testing
         this.MAX_HEALTH = 7;
+        this.MAX_HEALTH_LEFT = 5;
+        this.MAX_HEALTH_RIGHT = 9;
+        this.MAX_HEALTH_TOP = 15;
+        
         this.hand_cards = [];
         this.card_deck = [];
         this.hand_cards_state = [];
+        
         this.health_bar = [];
-
+        this.health_bar_left = [];
+        this.health_bar_right = [];
+        this.health_bar_top = [];
+        
         for(var i = 0; i < this.MAX_HEALTH; i++){
         	if(i % 2 === 0){
-        		var heart = this.add.image(60 + i * 37, 705, "left_heart").setScale(0.23);
+        		var heart = this.add.image(38 + i * 23, 705 - 20, "left_heart").setScale(0.17);
         		this.health_bar.push(heart);
         	}
         	else{
-        		var heart = this.add.image(60 + (i-1) * 37, 705, "right_heart").setScale(0.23);
+        		var heart = this.add.image(38 + (i-1) * 23, 705 - 20, "right_heart").setScale(0.17);
         		this.health_bar.push(heart);
         	}
         }
+        var temp_y = 200 - 20;
+        var temp_scale = 0.13;
+        for(var i = 0; i < this.MAX_HEALTH_LEFT; i++){
+        	if(i % 2 === 0){
+        		var heart = this.add.image(60 + i * 18, temp_y, "left_heart").setScale(temp_scale);
+        		this.health_bar_left.push(heart);
+        	}
+        	else{
+        		var heart = this.add.image(60 + (i-1) * 18, temp_y, "right_heart").setScale(temp_scale);
+        		this.health_bar_left.push(heart);
+        	}
+        }
+        
+        for(var i = 0; i < this.MAX_HEALTH_RIGHT; i++){
+        	if(i % 2 === 0){
+        		var heart = this.add.image(this.game.renderer.width - 200 + i * 18, temp_y, "left_heart").setScale(temp_scale);
+        		this.health_bar_right.push(heart);
+        	}
+        	else{
+        		var heart = this.add.image(this.game.renderer.width - 200 + (i-1) * 18, temp_y, "right_heart").setScale(temp_scale);
+        		this.health_bar_right.push(heart);
+        	}
+        }
+        alert("here3");
+        for(var i = 0; i < this.MAX_HEALTH_TOP; i++){
+        	if(i % 2 === 0){
+        		var heart = this.add.image(this.game.renderer.width/2 - 94 + i * 18, 19.5, "left_heart").setScale(temp_scale);
+        		this.health_bar_top.push(heart);
+        	}
+        	else{
+        		var heart = this.add.image(this.game.renderer.width/2 - 94 + (i-1) * 18, 19.5, "right_heart").setScale(temp_scale);
+        		this.health_bar_top.push(heart);
+        	}
+        }
+        
+        
         
         var i;
         
         
         this.basic_scale = 0.15;
-        
-        this.physics.add.sprite(1200, 633.4, "card_deck").setScale(1.2).depth = 30;
-        this.discard_place = this.add.image(this.game.renderer.width/2, this.game.renderer.height/2, "discard_place");
-        this.discard_place.setScale(1.2).depth = 30;
+        this.card_cover_scale = 1.6;
+  
+        this.physics.add.sprite(1200 - 10, 633.4 - 10, "card_deck").setScale(this.card_cover_scale).depth = 30;
+/*        this.discard_place = this.add.image(this.game.renderer.width/2, this.game.renderer.height/2, "discard_place");
+        this.discard_place.setScale(this.card_cover_scale).depth = -30;*/
 
         this.cardSprite_1 = this.physics.add.sprite(1200, 633.4, "card-sample_2").setInteractive().setScale(this.basic_scale);
         this.cardSprite_2 = this.physics.add.sprite(1202, 633.4, "card-sample_2").setInteractive().setScale(this.basic_scale);
@@ -135,12 +185,13 @@ export class RoomScene extends Phaser.Scene {
         this.deck_top_index = 0;
         
         // Adds confirm button
-        var drawButton = this.add.image(this.game.renderer.width * 0.85, this.game.renderer.height * 0.9, "confirm-button");
-        drawButton.setInteractive({ useHandCursor: true });
-        drawButton.on("pointerover", ()=>{
+        var endButton = this.add.image(this.game.renderer.width - 114, this.game.renderer.height - 100, "end_turn").setScale(0.425);
+        endButton.depth = 30;
+        endButton.setInteractive({ useHandCursor: true });
+        endButton.on("pointerover", ()=>{
             /*alert("hover");*/
         });
-        drawButton.on("pointerup", ()=>{
+        endButton.on("pointerup", ()=>{
         	if(this.initialize_hand){
         		this.draw_card(5);
 
@@ -149,12 +200,13 @@ export class RoomScene extends Phaser.Scene {
         		this.draw_card(1);
         	}
         });
-        
-        var playButton = this.add.image(this.game.renderer.width /2, this.game.renderer.height /2, "confirm-button");
-        playButton.setInteractive({ useHandCursor: true });
-        playButton.depth = 30;
+/*        alert("center width: " + this.game.renderer.width);
+        alert("center height: " + this.game.renderer.height);*/
+        var confirmButton = this.add.image(this.game.renderer.width - 116, this.game.renderer.height - 170, "confirm-button").setScale(0.42);
+        confirmButton.setInteractive({ useHandCursor: true });
+        confirmButton.depth = 30;
 
-        playButton.on("pointerup", ()=>{
+        confirmButton.on("pointerup", ()=>{
         	 if(this.to_play_card === true){
         		 this.scale_back();
         		 var index =  this.hand_cards_state.indexOf("to play");
@@ -196,7 +248,7 @@ export class RoomScene extends Phaser.Scene {
     				this.to_play_card = true;
     				alert("You selected teammateL.");
     				this.scale_back();
-    	        	this.teammateL.setScale(1.5);
+    	        	this.teammateL.setScale(this.hero_base_scale * 1.2);
     			}
     		}
         });
@@ -208,12 +260,47 @@ export class RoomScene extends Phaser.Scene {
     				this.to_play_card = true;
     				alert("You selected teammateR.");
     				this.scale_back();
-    	        	this.teammateR.setScale(1.5);
+    	        	this.teammateR.setScale(this.hero_base_scale * 1.2);
     			}
     		}
         });
     }
     
+    set_left_hero_health(num){
+    	if(num > this.MAX_HEALTH_LEFT){
+    		alert("The Health You Want To Set Exceeds The Hero's Max Health!");
+    	}
+    	for(var i = 0; i < num; i++){
+    		this.health_bar_left[i].visible = true;
+    	}
+    	for(var i = num; i < this.MAX_HEALTH_LEFT; i++){
+    		this.health_bar_left[i].visible = false;
+    	}
+    }
+    
+    set_top_hero_health(num){
+    	if(num > this.MAX_HEALTH_TOP){
+    		alert("The Health You Want To Set Exceeds The Hero's Max Health!");
+    	}
+    	for(var i = 0; i < num; i++){
+    		this.health_bar_top[i].visible = true;
+    	}
+    	for(var i = num; i < this.MAX_HEALTH_TOP; i++){
+    		this.health_bar_top[i].visible = false;
+    	}
+    }
+    
+    set_right_hero_health(num){
+    	if(num > this.MAX_HEALTH_RIGHT){
+    		alert("The Health You Want To Set Exceeds The Hero's Max Health!");
+    	}
+    	for(var i = 0; i < num; i++){
+    		this.health_bar_right[i].visible = true;
+    	}
+    	for(var i = num; i < this.MAX_HEALTH_RIGHT; i++){
+    		this.health_bar_right[i].visible = false;
+    	}
+    }
     
     arrange_hand_cards(index){
     	var i;
@@ -224,8 +311,8 @@ export class RoomScene extends Phaser.Scene {
     
     scale_back(){
     	this.thanos.setScale(1);
-    	this.teammateL.setScale(1);
-    	this.teammateR.setScale(1);
+    	this.teammateL.setScale(this.hero_base_scale);
+    	this.teammateR.setScale(this.hero_base_scale);
     }
     
     draw_card(num){
