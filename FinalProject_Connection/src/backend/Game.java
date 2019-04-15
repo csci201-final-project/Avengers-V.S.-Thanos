@@ -677,7 +677,7 @@ public class Game {
     					source_availiable.put(i);
     				}
     			}
-    			if(allPlayers.get(sourceIndex).getSoulStone())
+    			if(allPlayers.get(sourceIndex).getSoulStone()==true)
     			{
     				for(int j=0;j<allPlayers.get(sourceIndex).getHandCard().size();j++)
     				{
@@ -713,6 +713,7 @@ public class Game {
         	JSONObject jo = new JSONObject();
         	jo.put("TYPE","TURNSTART");
         	int record = -1;
+        	while(allPlayers.get(index).isDead()==true)
         	if(index+1>=4)
         	{
         		record = 0;
@@ -720,6 +721,13 @@ public class Game {
         	else
         	{
         		record = index+1;
+        	}
+        	/* Adjust for the dead player */
+        	while(allPlayers.get(record).isDead()==true)
+        	{
+        		record++;
+        		if(record==4)
+        			record = 0;
         	}
         	
         	jo.put("INDEX",record);
@@ -751,7 +759,7 @@ public class Game {
         	}
         	jo.put("AVAILABLECARDS", ja2);
         	
-        	if(allPlayers.get(record).getSoulStone()) // count for soul stone
+        	if(allPlayers.get(record).getSoulStone()==true) // count for soul stone
         	{
         		for(int i=0;i<cards.size();i++)
             	{
