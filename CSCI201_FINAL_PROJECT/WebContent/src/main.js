@@ -1,5 +1,6 @@
 import {RoomScene} from "./scene/RoomScene.js";
-import {MainScene} from "./scene/MainScene.js";
+import {LoadScene} from "./scene/LoadScene.js";
+
 
 var config = {
     width: 1300,
@@ -8,7 +9,7 @@ var config = {
         default: 'arcade'
     },
     scene: [
-        RoomScene, MainScene
+       LoadScene, RoomScene
     ],
 };
 

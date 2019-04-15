@@ -15,9 +15,17 @@ export class StartScene extends Phaser.Scene {
     preload() {
         // this.load.image("background", "./assets/background-title.jpg");
         // this.load.image("start-button", "./assets/start-button.jpg");
+    	this.load.audio("before_start", "./assets/Sounds/before_start.mp3");
+        this.load.image("background", "./assets/background-title.jpg");
+        this.load.image("start-button", "./assets/start-button.png");
     }
 
     create() {
+    	this.before_start = this.sound.add("before_start");
+      	this.before_start.volume = 1.5;
+       	this.before_start.play({loop: true});
+       	
+       	
         var width = this.game.config.width;
         var height = this.game.config.height;
         var bkg = this.add.image(this.game.renderer.width/2, this.game.renderer.height/2, "background");

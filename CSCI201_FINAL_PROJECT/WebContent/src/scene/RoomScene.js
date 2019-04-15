@@ -30,11 +30,9 @@ export class RoomScene extends Phaser.Scene {
         this.topID;
         
         this.players = [];
+        this.availableCards = null;
 
-        this.cardSprite = null;
-        this.target = 500;
-
-        this.socket = new WebSocket("ws://localhost:8080/Test_Phaser/server");
+        this.socket = new WebSocket("ws://localhost:8080/FINAL_PROJECT/server");
 
         var self = this;  // Allows access to "this"
 
@@ -92,6 +90,8 @@ export class RoomScene extends Phaser.Scene {
         // console.log("hero: ", this.hero);
         console.log(this.players[2].hero);
         this.isLoaded = true;
+        
+
     }
 
     parseTurnStart(obj) {
@@ -144,45 +144,28 @@ export class RoomScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image("background", "./assets/titan-bg.png");
-        this.load.image("confirm-button", "./assets/confirm-btn.png");
-        this.load.image("my-hero", "./assets/myhero.png");
-        this.load.image("bottom-bar", "./assets/bottom-bar.png");
-        this.load.image("teammate", "./assets/teammates.png");
-        this.load.image("undecided", "./assets/undecided-hero.png")
-
-        this.load.image("Thanos", "./assets/thanos.png");
-        this.load.image("IronMan", "./assets/iron-man.png");
-        this.load.image("Thor", "./assets/thor.png");
-        this.load.image("Hulk", "./assets/hulk.png");
-        this.load.image("Antman", "./assets/antman.png");
-        this.load.image("ScarletWitch", "./assets/black-widow.png");
-        this.load.image("DoctorStrange", "./assets/captain-marvel.png");
-
-        this.load.image("card_deck", "./assets/card_deck.png");
-        this.load.image("card-sample", "./assets/card-sample.png");
-        this.load.image("attack", "./assets/attack.png");
-        this.load.image("dodge", "./assets/dodge.png");
-        this.load.image("steal", "./assets/steal.png");
-        this.load.image("resist", "./assets/resist.png");
-
-        this.load.image("card-sample_2", "./assets/steal.jpg");
-        this.load.image("card-sample_3", "./assets/attack.jpg");
-        this.load.image("card-sample_4", "./assets/dodge.jpg");
-        this.load.image("card-sample_5", "./assets/steal.jpg");
-        this.load.image("card-sample_6", "./assets/resist.jpg");
-        this.load.image("card-sample_7", "./assets/attack.jpg");
-        this.load.image("card-sample_8", "./assets/resist.jpg");
-        this.load.image("discard_place", "./assets/card-sample_5.png");
-        this.load.image("end_turn", "./assets/endturn-btn.png");
-        this.load.image("left_heart", "./assets/left_heart.png");
-        this.load.image("right_heart", "./assets/right_heart.png");
-
+        
         //DEBUG
         this.load.image("start-btn", "./assets/start-button.png");
     }
 
     create() {
+    	//Adding music, need to be commented back
+/*    	this.before_start = this.sound.add("before_start");
+    	this.before_start.play({loop: true});
+    	this.before_start.volume = 1.5;*/
+    	
+    	
+    	//testing
+    	/*this.test = this.sound.add("test");
+    	this.test.play({loop: true});
+    	var self = this;
+    	this.test.once('complete', function(test){
+    		self.before_start = self.sound.add("before_start");
+    		self.before_start.play({loop: true});
+        	self.before_start.volume = 1.5;
+    	});*/
+    	
         // Adds all images
         this.add.image(this.game.renderer.width/2, this.game.renderer.height/2 - 100, "background");
         this.add.image(this.game.renderer.width/2, this.game.renderer.height - 125, "bottom-bar");
@@ -193,6 +176,14 @@ export class RoomScene extends Phaser.Scene {
        	this.teammateL = this.add.image(100 + 30, 300, "undecided").setInteractive().setScale(this.hero_base_scale = 0.75);
         this.teammateR = this.add.image(this.game.renderer.width - 115, 300, "undecided").setInteractive().setScale(this.hero_base_scale = 0.75);
         this.teammateT = this.add.image(this.game.renderer.width/2, 130, "undecided").setInteractive().setScale(this.hero_base_scale = 0.75);
+        
+  
+     
+        this.hand_card_num_scale = 0.6;
+        this.left_handsize_img = this.add.image(this.teammateL.x + 115, this.teammateL.y - 100, "0").setScale(this.hand_card_num_scale);
+        this.top_handsize_img = this.add.image(this.teammateT.x, this.teammateT.y + 115, "0").setScale(this.hand_card_num_scale);
+        this.right_handsize_img = this.add.image(this.teammateR.x - 115, this.teammateR.y - 100, "0").setScale(this.hand_card_num_scale);
+        
         
         
         //Theo's testing
@@ -236,11 +227,11 @@ export class RoomScene extends Phaser.Scene {
         
         for(var i = 0; i < this.MAX_HEALTH_RIGHT; i++){
         	if(i % 2 === 0){
-        		var heart = this.add.image(this.game.renderer.width - 200 + i * 18, temp_y, "left_heart").setScale(temp_scale);
+        		var heart = this.add.image(this.game.renderer.width - 200 + 30 + i * 18, temp_y, "left_heart").setScale(temp_scale);
         		this.health_bar_right.push(heart);
         	}
         	else{
-        		var heart = this.add.image(this.game.renderer.width - 200 + (i-1) * 18, temp_y, "right_heart").setScale(temp_scale);
+        		var heart = this.add.image(this.game.renderer.width - 200 + 30 + (i-1) * 18, temp_y, "right_heart").setScale(temp_scale);
         		this.health_bar_right.push(heart);
         	}
 		}
@@ -290,7 +281,7 @@ export class RoomScene extends Phaser.Scene {
         this.initialize_hand = true;
         this.deck_top_index = 0;
         
-        // Adds confirm button
+        // Adding end button
         var endButton = this.add.image(this.game.renderer.width - 114, this.game.renderer.height - 100, "end_turn").setScale(0.425);
         endButton.depth = 30;
         endButton.setInteractive({ useHandCursor: true });
@@ -306,12 +297,48 @@ export class RoomScene extends Phaser.Scene {
         		this.draw_card(1);
         	}
         });
-
+        
+        this.fade_out_cards = [];
+        this.fade_out_cards_scale = [];
+        
+        //adding confirm button
         var confirmButton = this.add.image(this.game.renderer.width - 116, this.game.renderer.height - 170, "confirm-button").setScale(0.42);
         confirmButton.setInteractive({ useHandCursor: true });
         confirmButton.depth = 30;
 
         confirmButton.on("pointerup", ()=>{
+        	//Theo's testing
+        	
+        	
+        	/*this.set_left_stone_effect(0, "time_stone");
+        	this.set_left_stone_effect(1, "space_stone");
+        	this.set_left_stone_effect(2, "power_stone");
+        	this.set_left_stone_effect(3, "reality_stone");
+        	this.set_left_stone_effect(4, "soul_stone");
+        	this.set_left_stone_effect(5, "mind_stone");
+        	
+        	this.set_right_stone_effect(0, "time_stone");
+        	this.set_right_stone_effect(1, "space_stone");
+        	this.set_right_stone_effect(2, "power_stone");
+        	this.set_right_stone_effect(3, "reality_stone");
+        	this.set_right_stone_effect(4, "soul_stone");
+        	this.set_right_stone_effect(5, "mind_stone");
+        	
+        	this.set_top_stone_effect(0, "time_stone");
+        	this.set_top_stone_effect(1, "space_stone");
+        	this.set_top_stone_effect(2, "power_stone");
+        	this.set_top_stone_effect(3, "reality_stone");
+        	this.set_top_stone_effect(4, "soul_stone");
+        	this.set_top_stone_effect(5, "mind_stone");
+        	
+        	this.set_my_stone_effect(0, "time_stone");
+        	this.set_my_stone_effect(1, "space_stone");
+        	this.set_my_stone_effect(2, "power_stone");
+        	this.set_my_stone_effect(3, "reality_stone");
+        	this.set_my_stone_effect(4, "soul_stone");
+        	this.set_my_stone_effect(5, "mind_stone");*/
+        	
+        	
             if(this.to_play_card === true){
                 this.scale_back();
                 var index =  this.hand_cards_state.indexOf("to play");
@@ -319,6 +346,11 @@ export class RoomScene extends Phaser.Scene {
                 this.hand_cards[index].y = this.game.renderer.height/2;
                 this.hand_cards[index].depth = 0;
   				this.hand_cards[index].removeInteractive();
+  				
+  				//adding fading effect after the card is played out
+  				this.fade_out_cards.push(this.hand_cards[index]);
+  				this.fade_out_cards_scale.push(this.basic_scale);
+  				this.time_marker = this.updateCount;
   				
   				this.arrange_hand_cards(index);
   				
@@ -332,17 +364,257 @@ export class RoomScene extends Phaser.Scene {
                 }
         	}
         });
-      
+        
+        
+
         var startButton = this.add.image(this.game.renderer.width/2 - 30, this.game.renderer.height/2 - 50, "start-btn");
         startButton.setInteractive({ useHandCursor: true });
         startButton.on("pointerup", ()=>{
             this.socket.send("request");
+            //needed to be commented back
+            /*this.before_start.stop()*/;
+/*            this.bg_music = this.sound.add("bg_music");
+            this.bg_music.volume = 1.5;
+            this.bg_music.play({loop: true});*/
         });
         
+        
+        
+        //creating the empty_stones
+        this.stone_scale = 0.35;
+        this.left_stone_bar = [];
+        this.right_stone_bar = [];
+        this.top_stone_bar = [];
+        this.my_stone_bar = [];
+        
+        var dist = 30;
+        for(var i = 1; i <= 6; i++){
+        	this.left_stone_bar.push(this.add.image(this.teammateL.x + 115, this.teammateL.y - 70 + i*dist, "stone_" + i).setScale(this.stone_scale));
+        	this.left_stone_bar[i-1].setInteractive();
+        	this.right_stone_bar.push(this.add.image(this.teammateR.x - 115, this.teammateR.y - 70 + i*dist, "stone_" + i).setScale(this.stone_scale));
+        	this.right_stone_bar[i-1].setInteractive();
+        	this.top_stone_bar.push(this.add.image(this.teammateT.x + 115, this.teammateT.y - 100 + i*dist, "stone_" + i).setScale(this.stone_scale));
+        	this.top_stone_bar[i-1].setInteractive();
+        	this.my_stone_bar.push(this.add.image(this.myHeroPic.x - 135, this.myHeroPic.y - 110 + i*dist, "stone_" + i).setScale(this.stone_scale));
+        	this.my_stone_bar[i-1].setInteractive();
+        }
+        
+        
+        this.rotation = 0.05;
+        this.added_stone_effect = false;
+
 
         // end of create
     }
+    
+    shake_camera(){
+    	this.cameras.main.shake(500);
+    }
+    
+    set_left_stone_effect(index, stone){
+    	if(!this.left_stone_bar[index])
+    		return false;
+    	this.left_stone_bar[index].on("pointerover", ()=>{
+        	this.temp_stone = this.add.image(this.left_stone_bar[index].x, this.left_stone_bar[index].y, stone).setScale(this.stone_scale * 1.5);
+        	this.temp_stone.depth = 30;
+        });
+    	this.left_stone_bar[index].on("pointerout", ()=>{
+        	this.temp_stone.destroy();
+        });
+    	return true;
+    }
+    
+    set_right_stone_effect(index, stone){
+    	if(!this.right_stone_bar[index])
+    		return false;
+    	this.right_stone_bar[index].on("pointerover", ()=>{
+    		this.temp_stone = this.add.image(this.right_stone_bar[index].x, this.right_stone_bar[index].y, stone).setScale(this.stone_scale * 1.5);
+        	this.temp_stone.depth = 30;
+        });
+    	this.right_stone_bar[index].on("pointerout", ()=>{
+    		this.temp_stone.destroy();
+        });
+    	return true;
+    }
+    
+    set_top_stone_effect(index, stone){
+    	if(!this.top_stone_bar[index])
+    		return false;
+    	this.top_stone_bar[index].on("pointerover", ()=>{
+    		this.temp_stone = this.add.image(this.top_stone_bar[index].x, this.top_stone_bar[index].y, stone).setScale(this.stone_scale * 1.5);
+        	this.temp_stone.depth = 30;
+        });
+    	this.top_stone_bar[index].on("pointerout", ()=>{
+    		this.temp_stone.destroy();
+        });
+    	return true;
+    }
+    
+    set_my_stone_effect(index, stone){
+    	if(!this.my_stone_bar[index])
+    		return false;
+    	this.my_stone_bar[index].on("pointerover", ()=>{
+        	/*this.my_stone_bar[index].setTexture(stone).setScale(this.stone_scale * 1.5);*/
+    		this.temp_stone = this.add.image(this.my_stone_bar[index].x, this.my_stone_bar[index].y, stone).setScale(this.stone_scale * 1.5);
+        	this.temp_stone.depth = 30;
+        });
+    	this.my_stone_bar[index].on("pointerout", ()=>{
+        	/*this.my_stone_bar[index].setTexture("stone_" + (index+1)).setScale(this.stone_scale);*/
+    		this.temp_stone.destroy();
+        });
+    	return true;
+    }
+	
+    
+    
+    
+    //this function will never needed to be called
+    update_remove_card(){
+    	if(this.fade_out_cards !== null && this.fade_out_cards.length != 0){
+    		for(var i = 0; i < this.fade_out_cards.length; i++){
+    			this.fade_out_cards_scale[i] = this.fade_out_cards_scale[i] - 0.005;
+        		this.fade_out_cards[i].setScale(this.fade_out_cards_scale[i]);
+        		if(this.fade_out_cards_scale[i] < 0.01){
+        			this.fade_out_cards[i].destroy();
+        			this.fade_out_cards.shift();
+        			this.fade_out_cards_scale.shift();
+        			
+        		}
+    		}
+    	}
+    	
+    	
+    }
+    
+    
+    
+    //helper function of update_stone()
+    update_stone_of(ID){
+    	var stone_bar;
+    	if(ID === this.leftID){
+    		stone_bar = this.left_stone_bar;
+    	}
+    	else if(ID === this.rightID){
+    		stone_bar = this.right_stone_bar;
+    	}
+    	else if(ID === this.topID){
+    		stone_bar = this.top_stone_bar;
+    	}
+    	else if(ID === this.playerID){
+    		stone_bar = this.my_stone_bar;
+    	}
+    	else{
+    		alert("Something is going wrong in stone!!!");
+    	}
+    	for(var i = 0; i < this.players[ID].stone.length; i++){
+			if(this.players[ID].stone[i] === "TimeStone"){
+				stone_bar[0].setTexture("time_stone").setScale(this.stone_scale);
+			}
+			else if(this.players[ID].stone[i] === "SpaceStone"){
+				stone_bar[1].setTexture("space_stone").setScale(this.stone_scale);
+			}
+			else if(this.players[ID].stone[i] === "PowerStone"){
+				stone_bar[2].setTexture("power_stone").setScale(this.stone_scale);
+			}
+			else if(this.players[ID].stone[i] === "RealityStone"){
+				stone_bar[3].setTexture("reality_stone").setScale(this.stone_scale);
+			}
+			else if(this.players[ID].stone[i] === "SoulStone"){
+				stone_bar[4].setTexture("soul_stone").setScale(this.stone_scale);
+			}
+			else if(this.players[ID].stone[i] === "MindStone"){
+				stone_bar[5].setTexture("mind_stone").setScale(this.stone_scale);
+			}
+		}
+    }
+    
 
+    
+    //this function will never needed to be called
+    update_stone(){
+    	if(this.players[this.leftID] && this.players[this.rightID] && this.players[this.topID] && this.hero !== ""){
+    		//clear the texture
+    		for(var i = 1; i <= 6; i++){
+    			this.left_stone_bar[i-1].setTexture("stone_" + i).setScale(this.stone_scale);
+            	this.right_stone_bar[i-1].setTexture("stone_" + i).setScale(this.stone_scale);
+            	this.top_stone_bar[i-1].setTexture("stone_" + i).setScale(this.stone_scale);
+            	this.my_stone_bar[i-1].setTexture("stone_" + i).setScale(this.stone_scale);
+    		}
+    		//setting the texture of the stone that the other 3 players really have
+    		this.update_stone_of(this.leftID);
+    		this.update_stone_of(this.rightID);
+    		this.update_stone_of(this.topID);
+    		this.update_stone_of(this.playerID);
+    		
+    		/*//setting the texture of the stone that "I" really have
+    		for(var i = 0; i < this.stone.length; i++){
+    			if(this.stone[i] === "TimeStone"){
+    				this.my_stone_bar[0].setTexture("time_stone").setScale(this.stone_scale);
+    			}
+    			else if(this.stone[i] === "SpaceStone"){
+    				this.my_stone_bar[1].setTexture("space_stone").setScale(this.stone_scale);
+    			}
+    			else if(this.stone[i] === "PowerStone"){
+    				this.my_stone_bar[2].setTexture("power_stone").setScale(this.stone_scale);
+    			}
+    			else if(this.stone[i] === "RealityStone"){
+    				this.my_stone_bar[3].setTexture("reality_stone").setScale(this.stone_scale);
+    			}
+    			else if(this.stone[i] === "SoulStone"){
+    				this.my_stone_bar[4].setTexture("soul_stone").setScale(this.stone_scale);
+    			}
+    			else if(this.stone[i] === "MindStone"){
+    				this.my_stone_bar[5].setTexture("mind_stone").setScale(this.stone_scale);
+    			}
+    		}*/
+    	}
+    }
+    
+    //this function will never needed to be called
+    update_health(){
+    	if(this.players[this.leftID] && this.players[this.rightID] && this.players[this.topID] && this.hero !== ""){
+    		this.set_this_hero_health(this.blood);
+    		this.set_left_hero_health(this.players[this.leftID].blood);
+    		this.set_right_hero_health(this.players[this.rightID].blood);
+    		this.set_top_hero_health(this.players[this.topID].blood);
+    	}
+    }
+    
+    //this function will never needed to be called
+    update_available_cards(){
+    	console.log("available cards: " + this.availableCards);
+    	if(this.hero !== "" && this.availableCards){
+    		for(var i = 0; i < this.hand_cards.length; i++){
+    			var found = false;
+    			for(var j = 0; j < this.availableCards.length; j++){
+        			if(i === this.availableCards[j]){
+        				found = true;
+        			}
+        		}
+    			//if this card is not available
+    			if(!found){
+    				this.hand_cards[i].disableInteractive();
+    			}
+    			else{
+    				this.hand_cards[i].setInteractive();
+    			}
+    		}
+    	}
+    }
+   
+    
+    //this function will be called in update automatically. So NO NEED to call this function anywhere in the program
+    update_current_hand_size(){
+    	if(this.players[this.leftID] && this.players[this.rightID] && this.players[this.topID]){
+    		this.left_handsize_img.setTexture(String(this.players[this.leftID].handsize)).setScale(this.hand_card_num_scale);
+            this.right_handsize_img.setTexture(String(this.players[this.rightID].handsize)).setScale(this.hand_card_num_scale);
+            this.top_handsize_img.setTexture(String(this.players[this.topID].handsize)).setScale(this.hand_card_num_scale);
+    	}
+    }
+    
+
+    
+    
     set_this_hero_health(num) {
         if(num > this.MAX_HEALTH){
     		alert("The Health You Want To Set Exceeds The Hero's Max Health!");
@@ -488,7 +760,7 @@ export class RoomScene extends Phaser.Scene {
                 }
                 else if (i !== this.playerID) {
                     if (!leftFlag) {
-                        leftID = i;
+                        this.leftID = i;
                         this.teammateL = this.add.image(100 + 30, 300, this.players[i].hero).setInteractive().setScale(this.hero_base_scale = 0.75);
                         leftFlag = true;
                     }
@@ -564,10 +836,70 @@ export class RoomScene extends Phaser.Scene {
         this.set_top_hero_health(this.players[this.topID].blood);
         this.set_this_hero_health(this.blood);
     }
+    
+    add_stone_effect(){
+    	if(this.added_stone_effect)
+    		return;
+    	
+    	//the following is a loooooong iffffffffff statement
+    	if(this.set_left_stone_effect(0, "time_stone") &&
+    	this.set_left_stone_effect(1, "space_stone") &&
+    	this.set_left_stone_effect(2, "power_stone") &&
+    	this.set_left_stone_effect(3, "reality_stone") &&
+    	this.set_left_stone_effect(4, "soul_stone") &&
+    	this.set_left_stone_effect(5, "mind_stone") &&
+    	
+    	this.set_right_stone_effect(0, "time_stone") &&
+    	this.set_right_stone_effect(1, "space_stone") &&
+    	this.set_right_stone_effect(2, "power_stone") &&
+    	this.set_right_stone_effect(3, "reality_stone") &&
+    	this.set_right_stone_effect(4, "soul_stone") &&
+    	this.set_right_stone_effect(5, "mind_stone") &&
+    	
+    	this.set_top_stone_effect(0, "time_stone") &&
+    	this.set_top_stone_effect(1, "space_stone") &&
+    	this.set_top_stone_effect(2, "power_stone") &&
+    	this.set_top_stone_effect(3, "reality_stone") &&
+    	this.set_top_stone_effect(4, "soul_stone") &&
+    	this.set_top_stone_effect(5, "mind_stone") &&
+    	
+    	this.set_my_stone_effect(0, "time_stone") &&
+    	this.set_my_stone_effect(1, "space_stone") &&
+    	this.set_my_stone_effect(2, "power_stone") &&
+    	this.set_my_stone_effect(3, "reality_stone") &&
+    	this.set_my_stone_effect(4, "soul_stone") &&
+    	this.set_my_stone_effect(5, "mind_stone")) {
+    		this.added_stone_effect = true;
+    	}
+    	
+    }
 
     update() {
-        this.textValue.text = (this.updateCount++).toString();
+    	this.update_current_hand_size();
+    	this.update_available_cards();
+    	this.update_health();
+    	this.update_stone();
+    	
+        this.textValue.text = parseInt(this.updateCount++/60).toString();
+        
+        if(this.updateCount >= this.time_marker + 5){
+        	this.time_marker = this.updateCount;
+        	this.update_remove_card();
+        }
+        
 
+        if(this.left_stone_bar && this.right_stone_bar && this.top_stone_bar && this.my_stone_bar){
+        	for(var i = 0; i < 6; i++){
+        		this.left_stone_bar[i].rotation += this.rotation;
+        		this.right_stone_bar[i].rotation += this.rotation;
+        		this.top_stone_bar[i].rotation += this.rotation;
+        		this.my_stone_bar[i].rotation += this.rotation;
+        	}
+        }
+        
+        this.add_stone_effect();
+        
+        
         if (this.isLoaded) {
             this.loadHeroPics();
             this.isLoaded = false;
