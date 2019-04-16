@@ -11,8 +11,11 @@ export class RoomScene extends Phaser.Scene {
             if(name=(new RegExp('[?&]'+encodeURIComponent(name)+'=([^&]*)')).exec(location.search))
                 return decodeURIComponent(name[1]);
         };
-        this.roomID = get("roomID");
+        var hostURL = window.location.host;
+        this.roomID = parseInt(get("gameID"));
         this.playerID = parseInt(get("playerID"));
+        // this.username = get("username");
+        this.username = get("username")
         console.log(this.playerID);
 
         // Initializes member variables
@@ -30,11 +33,19 @@ export class RoomScene extends Phaser.Scene {
         this.topID;
         
         this.players = [];
-        this.availableCards = null;
+        this.availableCards = [];
 
-        this.socket = new WebSocket("ws://localhost:8080/FINAL_PROJECT/server");
+        this.targetID = -1;
+
+        this.socket = new WebSocket("ws://" + hostURL + "/AVT/server");
 
         var self = this;  // Allows access to "this"
+        
+         // Tong: We need to record the current player
+        this.attackSource = -1; // Tong: This is dumb... but no idea of how to cleverly do that
+        this.attackTarget = false;
+        this.stealSource = -1;
+        this.stealTarget = false;
 
         // Overwrite same function as server, asynchronous
         this.socket.onopen = function(event) {
@@ -51,12 +62,20 @@ export class RoomScene extends Phaser.Scene {
             }
             else if (obj.TYPE === "TURNSTART") {
                 self.parseTurnStart(obj);
+         
             }
             else if (obj.TYPE === "DODGE") {
                 self.parseDodge(obj);
+                
             }
             else if (obj.TYPE === "TAKEDAMAGE") {
                 self.parseTakeDamage(obj);
+            }
+            else if (obj.TYPE == "UNDEFEATABLE") {
+                self.parseUndefeatable(obj);
+            }
+            else if (obj.TYPE == "CHANGECARD") {
+                self.parseChangeCard(obj);
             }
         }
         this.socket.onclose = function(event) {
@@ -72,8 +91,15 @@ export class RoomScene extends Phaser.Scene {
         this.stone = obj.STONE[this.playerID];
         this.attack = obj.ATTACK[this.playerID];
 
-        if (this.hero === "Thanos")
+        for (var i = 0; i < this.handcard.length; i++) {
+            var tempSprite = this.physics.add.sprite(1200, 633.4, this.handcard[i]).setInteractive().setScale(this.basic_scale);
+            this.card_deck.push(tempSprite);
+        }
+
+        if (this.hero === "Thanos"){
+        	//currentPlayer = this.playerID;
             this.isThanos = true;
+        }
 
         var idx;
         for (idx = 0; idx < 4; idx++) {
@@ -82,10 +108,14 @@ export class RoomScene extends Phaser.Scene {
                 hero    : obj.CHARACTER[idx],
                 stone   : obj.STONE[idx],
                 blood   : obj.BLOOD[idx],
-                handsize: obj.HANDCARD[idx].length
+                handsize: obj.HANDCARD[idx].length,
+                isDead  : false
             }
             this.players.push(tempObj);
+            console.log(tempObj);
+            //console.log()
         }
+
         // console.log("attack: ", this.attack);
         // console.log("hero: ", this.hero);
         console.log(this.players[2].hero);
@@ -96,7 +126,27 @@ export class RoomScene extends Phaser.Scene {
         if (obj.INDEX === this.playerID) {
             this.availableCards = obj.AVAILABLECARDS;
             this.stone = obj.STONE;
+
+            var diff = obj.HANDCARD.length - this.handcard.length;
             this.handcard = obj.HANDCARD;
+            this.handsize = obj.HANDCARD.length; // Tong 
+            // 	Tong: I also modify the function below!
+            if (diff > 0) {
+                var tempSprite = this.physics.add.sprite(1200, 633.4, this.handcard[this.handcard.length-diff]).setInteractive().setScale(this.basic_scale);
+                this.card_deck.push(tempSprite);
+                if (diff > 1) {
+                    tempSprite = this.physics.add.sprite(1200, 633.4, this.handcard[this.handcard.length-(diff-1)]).setInteractive().setScale(this.basic_scale);
+                    this.card_deck.push(tempSprite);
+                    if(diff > 2)
+                    {
+                    	 tempSprite = this.physics.add.sprite(1200, 633.4, this.handcard[this.handcard.length-1]).setInteractive().setScale(this.basic_scale);
+                         this.card_deck.push(tempSprite);
+                    }
+                }
+                
+                this.draw_card(diff);
+  
+            }
         }
         else {
             this.players[obj.INDEX].handsize = obj.HANDCARD.length;
@@ -106,9 +156,15 @@ export class RoomScene extends Phaser.Scene {
     parseDodge(obj) {
         if (obj.SOURCE.INDEX === this.playerID) {
             this.handcard = obj.SOURCE.HANDCARD;
+            this.availableCards = [];
+            //this.attackSource = obj.SOURCE;
         }
         else if (obj.TARGET.INDEX === this.playerID) {
             this.availableCards = obj.TARGET.AVAILABLECARDS;
+            //console.log("Shoot, I am being attacked!")
+            this.attackTarget = true; // Tong
+            this.attackSource = obj.SOURCE.INDEX;// Tong
+            console.log("Shoot, I am being attacked!")// Tong
         }
         this.players[obj.SOURCE.INDEX].handsize = obj.SOURCE.HANDCARD.length;
     }
@@ -119,6 +175,7 @@ export class RoomScene extends Phaser.Scene {
             this.availableCards = obj.SOURCE.AVAILABLECARDS;
         }
         else if (obj.TARGET.INDEX === this.playerID) {
+            this.availableCards = [];
             this.handcard = obj.TARGET.HANDCARD;
             this.blood = obj.TARGET.BLOOD;
             if (obj.TARGET.GAMEEND === "FALSE") {
@@ -134,7 +191,66 @@ export class RoomScene extends Phaser.Scene {
                 this.isDead = true;
             }
         }
+        if (obj.TARGET.ISDEAD === "TRUE") {
+            this.players[obj.TARGET.INDEX].isDead = true;
+        }
+        this.players[obj.TARGET.INDEX].blood = obj.TARGET.BLOOD;
         this.players[obj.TARGET.INDEX].handsize = obj.TARGET.HANDCARD.length;
+    }
+
+    parseUndefeatable(obj) {
+        if (obj.SOURCE.INDEX === this.playerID) {
+            this.handcard = obj.SOURCE.HANDCARD;
+            this.availableCards = [];
+         
+        }
+        else if (obj.TARGET.INDEX === this.playerID) {
+            this.availableCards = obj.TARGET.AVAILABLECARDS;
+            this.stealTarget = true; // Tong
+            this.stealSource = obj.SOURCE.INDEX; //Tong
+            console.log("Shoot, I am being stolen!");
+        }
+        this.players[obj.SOURCE.INDEX].handsize = obj.SOURCE.HANDCARD.length;
+    }
+
+    parseChangeCard(obj) {
+        if (obj.SOURCE.INDEX === this.playerID) {
+            this.stone = obj.SOURCE.STONE;
+            this.availableCards = obj.SOURCE.AVAILABLECARDS;
+
+            var diff = obj.SOURCE.HANDCARD.length - this.handcard.length;
+            this.handcard = obj.SOURCE.HANDCARD;
+            if (diff > 0) {
+                var tempSprite = this.physics.add.sprite(1200, 633.4, this.handcard[this.handcard.length-1]).setInteractive().setScale(this.basic_scale);
+                this.card_deck.push(tempSprite);
+                this.draw_card(1);
+            }
+        }
+        else if (obj.TARGET.INDEX === this.playerID) {
+            this.availableCards = [];
+            var tempHand = obj.TARGET.HANDCARD;
+            if (tempHand.length !== this.handcard.length) {
+                var i = 0;
+                var j = 0;
+                while (tempHand[i] === this.handcard[j]) {
+                    i++;
+                    j++;
+                }
+                this.removeCard(i);
+                this.handcard = tempHand;
+            }
+            // BUG!!! We ignore the case that a player is dead
+        }
+        //console.log()
+        if(this.playerID==obj.SOURCE.HANDCARD.length){
+        	this.handsize = obj.SOURCE.HANDCARD.length;
+        	this.players[obj.TARGET.INDEX].handsize = obj.TARGET.HANDCARD.length;
+        }
+        else
+        {
+        	this.handsize = obj.TARGET.HANDCARD.length;
+        	this.players[obj.SOURCE.INDEX].handsize = obj.SOURCE.HANDCARD.length;
+        }
     }
 
     init() {
@@ -142,28 +258,27 @@ export class RoomScene extends Phaser.Scene {
     }
 
     preload() {
-        
         //DEBUG
         this.load.image("start-btn", "./assets/start-button.png");
     }
 
     create() {
-    	//Adding music, need to be commented back
-/*    	this.before_start = this.sound.add("before_start");
-    	this.before_start.play({loop: true});
-    	this.before_start.volume = 1.5;*/
+        //Adding music, need to be commented back
+    	// this.before_start = this.sound.add("before_start");
+    	// this.before_start.play({loop: true});
+    	// this.before_start.volume = 1.5;
     	
     	
-    	//testing
-    	/*this.test = this.sound.add("test");
-    	this.test.play({loop: true});
-    	var self = this;
-    	this.test.once('complete', function(test){
-    		self.before_start = self.sound.add("before_start");
-    		self.before_start.play({loop: true});
-        	self.before_start.volume = 1.5;
-    	});*/
-    	
+    	// //testing
+    	// this.test = this.sound.add("test");
+    	// this.test.play({loop: true});
+    	// var self = this;
+    	// this.test.once('complete', function(test){
+    	// 	self.before_start = self.sound.add("before_start");
+    	// 	self.before_start.play({loop: true});
+        // 	self.before_start.volume = 1.5;
+    	// });
+
         // Adds all images
         this.add.image(this.game.renderer.width/2, this.game.renderer.height/2 - 100, "background");
         this.add.image(this.game.renderer.width/2, this.game.renderer.height - 125, "bottom-bar");
@@ -175,15 +290,12 @@ export class RoomScene extends Phaser.Scene {
         this.teammateR = this.add.image(this.game.renderer.width - 115, 300, "undecided").setInteractive().setScale(this.hero_base_scale = 0.75);
         this.teammateT = this.add.image(this.game.renderer.width/2, 130, "undecided").setInteractive().setScale(this.hero_base_scale = 0.75);
         
-  
-     
+        // Adds handsize icons
         this.hand_card_num_scale = 0.6;
         this.left_handsize_img = this.add.image(this.teammateL.x + 115, this.teammateL.y - 100, "0").setScale(this.hand_card_num_scale);
         this.top_handsize_img = this.add.image(this.teammateT.x, this.teammateT.y + 115, "0").setScale(this.hand_card_num_scale);
         this.right_handsize_img = this.add.image(this.teammateR.x - 115, this.teammateR.y - 100, "0").setScale(this.hand_card_num_scale);
-        
-        
-        
+
         //Theo's testing
         this.MAX_HEALTH = 14;
         this.MAX_HEALTH_LEFT = 10;
@@ -253,33 +365,15 @@ export class RoomScene extends Phaser.Scene {
 /*        this.discard_place = this.add.image(this.game.renderer.width/2, this.game.renderer.height/2, "discard_place");
         this.discard_place.setScale(this.card_cover_scale).depth = -30;*/
 
-        this.cardSprite_1 = this.physics.add.sprite(1200, 633.4, "card-sample_2").setInteractive().setScale(this.basic_scale);
-        this.cardSprite_2 = this.physics.add.sprite(1202, 633.4, "card-sample_2").setInteractive().setScale(this.basic_scale);
-        this.cardSprite_3 = this.physics.add.sprite(1204, 633.4, "card-sample_3").setInteractive().setScale(this.basic_scale);
-        this.cardSprite_4 = this.physics.add.sprite(1206, 633.4, "card-sample_4").setInteractive().setScale(this.basic_scale);
-        this.cardSprite_5 = this.physics.add.sprite(1208, 633.4, "card-sample_5").setInteractive().setScale(this.basic_scale);
-        this.cardSprite_6 = this.physics.add.sprite(1208, 633.4, "card-sample_6").setInteractive().setScale(this.basic_scale);
-        this.cardSprite_7 = this.physics.add.sprite(1208, 633.4, "card-sample_7").setInteractive().setScale(this.basic_scale);
-        this.cardSprite_8 = this.physics.add.sprite(1208, 633.4, "card-sample_8").setInteractive().setScale(this.basic_scale);
-        
-        this.card_deck.push(this.cardSprite_1);
-        this.card_deck.push(this.cardSprite_2);
-        this.card_deck.push(this.cardSprite_3);
-        this.card_deck.push(this.cardSprite_4);
-        this.card_deck.push(this.cardSprite_5);
-        this.card_deck.push(this.cardSprite_6);
-        this.card_deck.push(this.cardSprite_7);
-        this.card_deck.push(this.cardSprite_8);
-        
         var style = { font: "65px Arial", fill: "#ff0000", align: "center" };
         this.textValue = this.add.text(0, 0, "0", style);
         this.updateCount = 0;
 
         this.num_to_draw = 5;
-        this.initialize_hand = true;
+        // this.initialize_hand = true;
         this.deck_top_index = 0;
         
-        // Adding end button
+        // Adds end turn button
         var endButton = this.add.image(this.game.renderer.width - 114, this.game.renderer.height - 100, "end_turn").setScale(0.425);
         endButton.depth = 30;
         endButton.setInteractive({ useHandCursor: true });
@@ -287,66 +381,133 @@ export class RoomScene extends Phaser.Scene {
             /*alert("hover");*/
         });
         endButton.on("pointerup", ()=>{
-        	if(this.initialize_hand){
-        		this.draw_card(5);
-
-        	}
-        	else if(this.num_to_draw === 0){
-        		this.draw_card(1);
-        	}
+        	// if(this.initialize_hand){
+        	// 	this.draw_card(this.handcard.length);
+        	// }
+        	// else if(this.num_to_draw === 0){
+        	// 	this.draw_card(1);
+            // }
+            var tempObj = {};
+            tempObj.TYPE = "PLAYEREND";
+            tempObj.TARGET = this.playerID;
+            tempObj.GAMEID = this.roomID;
+            console.log(JSON.stringify(tempObj));
+            this.socket.send(JSON.stringify(tempObj));
         });
-        
-        
-        //adding confirm button
+
+        // Adds confirm button
         var confirmButton = this.add.image(this.game.renderer.width - 116, this.game.renderer.height - 170, "confirm-button").setScale(0.42);
         confirmButton.setInteractive({ useHandCursor: true });
         confirmButton.depth = 30;
-
+         
+        //Tong: This function is modified heavily by me! Please double check!
         confirmButton.on("pointerup", ()=>{
-        	//Theo's testing
-/*        	alert("testing2");
-        	this.players[this.leftID].blood--;
-        	this.players[this.rightID].blood--;
-        	this.players[this.topID].blood--;
-        	this.blood--;*/
-        	
-        	
-            if(this.to_play_card === true){
-                this.scale_back();
-                var index =  this.hand_cards_state.indexOf("to play");
-                this.hand_cards[index].x = this.game.renderer.width/2;
-                this.hand_cards[index].y = this.game.renderer.height/2;
-                this.hand_cards[index].depth = 0;
-  				this.hand_cards[index].removeInteractive();
-  				
-  				this.arrange_hand_cards(index);
-  				
-  				this.hand_cards_state.splice(index, 1);
-  				this.hand_cards.splice(index,1);
-  				
-                this.to_play_card = false;
-                
-                for(i = 0; i < this.hand_cards.length; i++){
-                    this.add_card_click_effect(i, true);
-                }
+        	console.log(this.to_play_card);
+        	var index =  this.hand_cards_state.indexOf("to play");
+        	console.log(index);
+        	var tempObj = {};
+        	if(this.attackTarget==true)
+        	{
+        		tempObj.TYPE = "DODGE";
+                tempObj.GAMEID = this.roomID;
+                tempObj.CARD = index;
+                tempObj.SOURCE = this.attackSource;
+                tempObj.TARGET = this.playerID;
+        		this.attackTarget = false;
         	}
+        	else if(this.stealTarget==true)
+        	{
+        		tempObj.TYPE = "UNDEFEATABLE";
+                tempObj.GAMEID = this.roomID;
+                tempObj.CARD = index;
+                tempObj.SOURCE = this.stealSource;
+                tempObj.TARGET = this.playerID;
+        		this.stealTarget = false;
+        	}
+        	else // Note: this is not dumb-user proof :D
+        	{
+                this.scale_back();
+                // Sends to backend (type: attack, steal)
+                if (this.targetID !== -1) 
+                {
+                   //Tong: I modify the code below
+                    if (this.handcard[index] === "STEAL") {
+                        tempObj.TYPE = "STEAL";
+                        tempObj.GAMEID = this.roomID;
+                        tempObj.CARD = index;
+                        tempObj.TARGET = this.targetID;
+                        tempObj.SOURCE = this.playerID;
+                    }
+                    else 
+                    {
+                        tempObj.TYPE = "ATTACK";
+                        tempObj.GAMEID = this.roomID;
+                        tempObj.CARD = index;
+                        tempObj.SOURCE = this.playerID;
+                        tempObj.TARGET = this.targetID;
+                    }
+                    /*
+                    else{
+                    	 this part is for soulStone, but I haven't figured out what to do, TBC
+                    	var hasSoulStone = false;
+                    	for(var i=0;i<this.stone.length;i++)
+                    	{
+                    		if(this.stone[i]==="SoulStone")
+                    		{
+                    			hasSoulStone = true;
+                    		}
+                    	}
+                    	if(hasSoulStone==true)
+                    	{
+                    		
+                    	}
+                    	
+                    	tempObj.TYPE = "DODGE";
+                    	tempObj.GAMEID = this.roomID;
+                        tempObj.CARD = index;
+                        tempObj.SOURCE = this.targetID;
+                        tempObj.TARGET = this.playerID;
+                    	
+                    }
+                	*/
+                    /*
+                    tempObj.GAMEID = this.roomID;
+                    tempObj.CARD = index;
+                    tempObj.TARGET = this.targetID;
+                    tempObj.SOURCE = this.playerID;
+                    */
+//                    console.log(JSON.stringify(tempObj));
+//                    this.socket.send(JSON.stringify(tempObj));	
+                    
+                }
+                
+                // end of Tong's modification
+        	}
+        	console.log(JSON.stringify(tempObj));
+            this.socket.send(JSON.stringify(tempObj));	
+        	if(index!=-1)
+            {
+             	this.removeCard(index);
+            }
         });
-        
-        
-
+      
         var startButton = this.add.image(this.game.renderer.width/2 - 30, this.game.renderer.height/2 - 50, "start-btn");
         startButton.setInteractive({ useHandCursor: true });
-        startButton.on("pointerup", ()=>{
-            this.socket.send("request");
+        startButton.once("pointerup", ()=>{
+            //this.socket.send("request");  // testing
+
             //needed to be commented back
-            /*this.before_start.stop()*/;
+            /*this.before_start.stop();*/
 /*            this.bg_music = this.sound.add("bg_music");
             this.bg_music.volume = 1.5;
             this.bg_music.play({loop: true});*/
+
+            var tempObj = {};
+            tempObj.TYPE = "GAMESTART";
+            tempObj.GAMEID = this.roomID;
+            this.socket.send(JSON.stringify(tempObj));
         });
-        
-        
-        
+
         //creating the empty_stones
         this.stone_scale = 0.35;
         this.left_stone_bar = [];
@@ -362,35 +523,87 @@ export class RoomScene extends Phaser.Scene {
         	this.my_stone_bar.push(this.add.image(this.myHeroPic.x - 135, this.myHeroPic.y - 110 + i*dist, "stone_" + i).setScale(this.stone_scale));
         }
 
-
+        // Game start signal
+        var tempObj = {};
+        tempObj.GAMEID = this.roomID;
+        tempObj.USERNAME = this.username;
+        if (this.playerID === 0) {
+            tempObj.TYPE = "NEWGAME";
+        }
+        else {
+            tempObj.TYPE = "CONNECTION";
+        }
+        this.socket.send(JSON.stringify(tempObj));
+        
         // end of create
     }
+
+    
+    
     
     //helper function of update_stone()
     update_stone_of(ID){
-    	for(var i = 0; i < this.players[ID].stone.length; i++){
-			if(this.players[ID].stone[i] === "TimeStone"){
-				this.left_stone_bar[0].setTexture("time_stone").setScale(this.stone_scale);
-			}
-			else if(this.players[ID].stone[i] === "SpaceStone"){
-				this.left_stone_bar[1].setTexture("space_stone").setScale(this.stone_scale);
-			}
-			else if(this.players[ID].stone[i] === "PowerStone"){
-				this.left_stone_bar[2].setTexture("power_stone").setScale(this.stone_scale);
-			}
-			else if(this.players[ID].stone[i] === "RealityStone"){
-				this.left_stone_bar[3].setTexture("reality_stone").setScale(this.stone_scale);
-			}
-			else if(this.players[ID].stone[i] === "SoulStone"){
-				this.left_stone_bar[4].setTexture("soul_stone").setScale(this.stone_scale);
-			}
-			else if(this.players[ID].stone[i] === "MindStone"){
-				this.left_stone_bar[5].setTexture("mind_stone").setScale(this.stone_scale);
-			}
-		}
+        var stone_bar;
+        if (ID === this.leftID){
+            stone_bar = this.left_stone_bar;
+        }
+        else if (ID === this.rightID){
+            stone_bar = this.right_stone_bar;
+        }
+        else if (ID === this.topID){
+            stone_bar = this.top_stone_bar;
+        }
+        else if (ID === this.playerID) {
+            stone_bar = this.my_stone_bar;
+        }
+        else{
+            alert("Something is going wrong in stone!!!");
+        }
+        for(var i = 0; i < this.players[ID].stone.length; i++){
+            if(this.players[ID].stone[i] === "TimeStone"){
+                stone_bar[0].setTexture("time_stone").setScale(this.stone_scale);
+            }
+            else if(this.players[ID].stone[i] === "SpaceStone"){
+                stone_bar[1].setTexture("space_stone").setScale(this.stone_scale);
+            }
+            else if(this.players[ID].stone[i] === "PowerStone"){
+                stone_bar[2].setTexture("power_stone").setScale(this.stone_scale);
+            }
+            else if(this.players[ID].stone[i] === "RealityStone"){
+                stone_bar[3].setTexture("reality_stone").setScale(this.stone_scale);
+            }
+            else if(this.players[ID].stone[i] === "SoulStone"){
+                stone_bar[4].setTexture("soul_stone").setScale(this.stone_scale);
+            }
+            else if(this.players[ID].stone[i] === "MindStone"){
+                stone_bar[5].setTexture("mind_stone").setScale(this.stone_scale);
+            }
+        }
     }
-    
-    
+
+    removeCard(index) {
+        this.hand_cards[index].x = this.game.renderer.width/2;
+        this.hand_cards[index].y = this.game.renderer.height/2;
+        this.hand_cards[index].depth = 0;
+
+        // Disable interaction
+        this.hand_cards[index].off("pointerdown");
+        this.hand_cards[index].off("pointerover");
+        this.hand_cards[index].off("pointerout");
+        
+        this.arrange_hand_cards(index);
+        
+        this.hand_cards_state.splice(index, 1);
+        this.hand_cards.splice(index, 1);
+        this.handcard.splice(index, 1);
+        
+        this.to_play_card = false;
+        var i;
+        for(i = 0; i < this.hand_cards.length; i++){
+            this.add_card_click_effect(i);
+        }
+    }
+
     //this function will never needed to be called
     update_stone(){
     	if(this.players[this.leftID] && this.players[this.rightID] && this.players[this.topID] && this.hero !== ""){
@@ -404,29 +617,8 @@ export class RoomScene extends Phaser.Scene {
     		//setting the texture of the stone that the other 3 players really have
     		this.update_stone_of(this.leftID);
     		this.update_stone_of(this.rightID);
-    		this.update_stone_of(this.topID);
-    		
-    		//setting the texture of the stone that "I" really have
-    		for(var i = 0; i < this.stone.length; i++){
-    			if(this.stone[i] === "TimeStone"){
-    				this.left_stone_bar[0].setTexture("time_stone").setScale(this.stone_scale);
-    			}
-    			else if(this.stone[i] === "SpaceStone"){
-    				this.left_stone_bar[1].setTexture("space_stone").setScale(this.stone_scale);
-    			}
-    			else if(this.stone[i] === "PowerStone"){
-    				this.left_stone_bar[2].setTexture("power_stone").setScale(this.stone_scale);
-    			}
-    			else if(this.stone[i] === "RealityStone"){
-    				this.left_stone_bar[3].setTexture("reality_stone").setScale(this.stone_scale);
-    			}
-    			else if(this.stone[i] === "SoulStone"){
-    				this.left_stone_bar[4].setTexture("soul_stone").setScale(this.stone_scale);
-    			}
-    			else if(this.stone[i] === "MindStone"){
-    				this.left_stone_bar[5].setTexture("mind_stone").setScale(this.stone_scale);
-    			}
-    		}
+            this.update_stone_of(this.topID);
+            this.update_stone_of(this.playerID);
     	}
     }
     
@@ -442,7 +634,7 @@ export class RoomScene extends Phaser.Scene {
     
     //this function will never needed to be called
     update_available_cards(){
-    	console.log("available cards: " + this.availableCards);
+    	//console.log("available cards: " + this.availableCards);
     	if(this.hero !== "" && this.availableCards){
     		for(var i = 0; i < this.hand_cards.length; i++){
     			var found = false;
@@ -471,10 +663,7 @@ export class RoomScene extends Phaser.Scene {
             this.top_handsize_img.setTexture(String(this.players[this.topID].handsize)).setScale(this.hand_card_num_scale);
     	}
     }
-    
 
-    
-    
     set_this_hero_health(num) {
         if(num > this.MAX_HEALTH){
     		alert("The Health You Want To Set Exceeds The Hero's Max Health!");
@@ -482,11 +671,20 @@ export class RoomScene extends Phaser.Scene {
     	for(var i = 0; i < num; i++){
     		this.health_bar[i].visible = true;
     	}
-    	for(var i = num; i < this.MAX_HEALTH; i++){
-    		this.health_bar[i].visible = false;
+    	if(num>=0)
+    	{
+    		for(var i = num; i < this.MAX_HEALTH; i++){
+    			this.health_bar[i].visible = false;
+    		}
+    	}
+    	if(num<0)
+    	{
+    		for(var i = 0; i < this.MAX_HEALTH; i++){
+    			this.health_bar[i].visible = false;
+    		}
     	}
     }
-    
+    // Tong: adjust for possible negative i index
     set_left_hero_health(num){
     	if(num > this.MAX_HEALTH_LEFT){
     		alert("The Health You Want To Set Exceeds The Hero's Max Health!");
@@ -494,8 +692,17 @@ export class RoomScene extends Phaser.Scene {
     	for(var i = 0; i < num; i++){
     		this.health_bar_left[i].visible = true;
     	}
-    	for(var i = num; i < this.MAX_HEALTH_LEFT; i++){
-    		this.health_bar_left[i].visible = false;
+    	if(num>=0)
+    	{
+    		for(var i = num; i < this.MAX_HEALTH_LEFT; i++){
+    			this.health_bar_left[i].visible = false;
+    		}
+    	}
+    	if(num<0)
+    	{
+    		for(var i = 0; i < this.MAX_HEALTH_LEFT; i++){
+    			this.health_bar_left[i].visible = false;
+    		}
     	}
     }
     
@@ -506,8 +713,17 @@ export class RoomScene extends Phaser.Scene {
     	for(var i = 0; i < num; i++){
     		this.health_bar_top[i].visible = true;
     	}
-    	for(var i = num; i < this.MAX_HEALTH_TOP; i++){
-    		this.health_bar_top[i].visible = false;
+    	if(num>=0)
+    	{
+    		for(var i = num; i < this.MAX_HEALTH_TOP; i++){
+    			this.health_bar_top[i].visible = false;
+    		}
+    	}
+    	if(num<0)
+    	{
+    		for(var i = 0; i < this.MAX_HEALTH_TOP; i++){
+    			this.health_bar_top[i].visible = false;
+    		}
     	}
     }
     
@@ -518,8 +734,17 @@ export class RoomScene extends Phaser.Scene {
     	for(var i = 0; i < num; i++){
     		this.health_bar_right[i].visible = true;
     	}
-    	for(var i = num; i < this.MAX_HEALTH_RIGHT; i++){
-    		this.health_bar_right[i].visible = false;
+    	if(num>=0)
+    	{
+    		for(var i = num; i < this.MAX_HEALTH_RIGHT; i++){
+    			this.health_bar_right[i].visible = false;
+    		}
+    	}
+    	if(num<0)
+    	{
+    		for(var i = 0; i < this.MAX_HEALTH_RIGHT; i++){
+    			this.health_bar_right[i].visible = false;
+    		}
     	}
     }
     
@@ -545,8 +770,11 @@ export class RoomScene extends Phaser.Scene {
     	var i;
     	for(i = 0; i < num; i++){
     		this.hand_cards.push(this.card_deck.shift());
+    		console.log(this.hand_cards.length);
     		this.hand_cards[this.hand_cards.length-1].body.setVelocityX(-350);
-            this.hand_cards[this.hand_cards.length-1].depth = 1;
+    		this.hand_cards[this.hand_cards.length-1].depth = 1;
+    		console.log("I currently have handsize = " + this.hand_cards.length);
+            //this.hand_cards[this.hand_cards.length-1].depth = 1;
             this.hand_cards_state.push("draw");
     	}
     	
@@ -607,7 +835,6 @@ export class RoomScene extends Phaser.Scene {
         this.teammateT.destroy();
         this.teammateR.destroy();
         this.myHeroPic.destroy();
-
         
         // Adds images
         this.myHeroPic = this.add.image(200, 550, this.hero).setScale(0.85);
@@ -661,7 +888,8 @@ export class RoomScene extends Phaser.Scene {
     				this.to_play_card = true;
     				alert("You selected " + this.topID + ":" + this.players[this.topID].hero);
     				this.scale_back();
-    	        	this.teammateT.setScale(this.hero_base_scale * 1.2);
+                    this.teammateT.setScale(this.hero_base_scale * 1.2);
+                    this.targetID = this.topID;
     			}
     		}
         });
@@ -673,7 +901,8 @@ export class RoomScene extends Phaser.Scene {
     				this.to_play_card = true;
     				alert("You selected " + this.leftID + ":" + this.players[this.leftID].hero);
     				this.scale_back();
-    	        	this.teammateL.setScale(this.hero_base_scale * 1.2);
+                    this.teammateL.setScale(this.hero_base_scale * 1.2);
+                    this.targetID = this.leftID;
     			}
     		}
         });
@@ -686,9 +915,12 @@ export class RoomScene extends Phaser.Scene {
     				alert("You selected " + this.rightID + ":" + this.players[this.rightID].hero);
     				this.scale_back();
     	        	this.teammateR.setScale(this.hero_base_scale * 1.2);
-    			}
+                    this.targetID = this.rightID;
+                }
     		}
         });
+
+        this.draw_card(this.card_deck.length);
 
         // Sets hero health
         this.set_left_hero_health(this.players[this.leftID].blood);
@@ -697,13 +929,14 @@ export class RoomScene extends Phaser.Scene {
         this.set_this_hero_health(this.blood);
     }
 
-    update() {
-    	this.update_current_hand_size();
+    update() 
+    {
+        this.update_current_hand_size();
     	this.update_available_cards();
     	this.update_health();
     	this.update_stone();
-    	
-        this.textValue.text = parseInt(this.updateCount++/60).toString();
+
+        this.textValue.text = (this.updateCount++).toString();
 
         if (this.isLoaded) {
             this.loadHeroPics();
@@ -713,7 +946,7 @@ export class RoomScene extends Phaser.Scene {
        	if(this.num_to_draw === 0){
        		return;
        	}
-       	
+
     	if(this.draw_more_cards){
     		var i;
         	for(i = 0; i < this.hand_cards.length; i++){
@@ -725,9 +958,9 @@ export class RoomScene extends Phaser.Scene {
                      	cardSprite.x = 401 + i*dist;
                      	this.num_to_draw--;
                      	this.hand_cards_state[i] = "hand";
-                     	this.add_card_click_effect(i, false);
+                     	this.add_card_click_effect(i);
                      	if(this.num_to_draw === 0){
-                    		this.initialize_hand = false;
+                    		// this.initialize_hand = false;
                     		this.draw_more_cards = false;
                      	}
                  	 }
