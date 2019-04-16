@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet("/DirectServlet")
 public class DirectServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-	private static final String PASSWORD = "165683466";
+	private static final String PASSWORD = "";
        
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException 
 	{
