@@ -25,25 +25,21 @@
 						var playerID = this.responseText;
 						// Checks if room is full
 						var username = "<%= username %>";
-						alert("playerID: " + playerID);
-						alert("username: " + username);
+
 						if(playerID === "1"){
 							document.myform.action = "./game-room.html?gameID=" + gameID + "&playerID=" + playerID + "&username=" + username;
 							document.myform.method = "GET";
 							document.myform.submit(); 
 							/* window.location.href = "./game-room.html?gameID=" + gameID + "&playerID=" + playerID + "&username=" + username; */
-							alert("here3");
 						}
 						if (playerID.length > 3) {
 							document.getElementById("error").innerHTML = "Room is already full";
-							alert("here1");
 						}
 						else{
 /* 							document.myform.action = "./game-room.html?gameID=" + gameID + "&playerID=" + playerID + "&username=" + username;
 							document.myform.method = "GET";
 							document.myform.submit(); */
 							window.location.href = "./game-room.html?gameID=" + gameID + "&playerID=" + playerID + "&username=" + username;
-							alert("here2");
 						}
 					}
 					

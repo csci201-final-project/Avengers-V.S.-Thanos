@@ -16,7 +16,7 @@ export class RoomScene extends Phaser.Scene {
         this.playerID = parseInt(get("playerID"));
         // this.username = get("username");
         this.username = get("username")
-        console.log(this.playerID);
+        //console.log(this.playerID);
 
         // Initializes member variables
         this.isThanos = false;
@@ -33,10 +33,20 @@ export class RoomScene extends Phaser.Scene {
         this.topID;
         
         //THEO ADDING
+        this.stones = [];
+        this.update_stone_scaling = [];
+       	this.update_stone_moving = [];
+       	this.stone_scale_marker = [];
+       	this.stone_target_ID = [];
+       	this.stone_tracker = [0, 0, 0, 0];
+       	this.update_bulb_top = false;
+       	this.update_bulb_left = false;
+       	this.update_bulb_right = false;
+       	this.light_timer = 0;
+       	
         this.confirmButton_interactive = false;
         this.endButton_interactive = false;
         this.test_num = -1;
-        
         this.players = [];
         this.availableCards = [];
 
@@ -46,7 +56,7 @@ export class RoomScene extends Phaser.Scene {
 
         var self = this;  // Allows access to "this"
         
-         // Tong: We need to record the current player
+        this.currentPlayer=-1 // Tong: We need to record the current player, for start and endturn
         this.attackSource = -1; // Tong: This is dumb... but no idea of how to cleverly do that
         this.attackTarget = false;
         this.stealSource = -1;
@@ -125,13 +135,28 @@ export class RoomScene extends Phaser.Scene {
         // console.log("hero: ", this.hero);
         console.log(this.players[2].hero);
         this.isLoaded = true;
+        
     }
 
     parseTurnStart(obj) {
+    	//Tong 
+    	this.currentPlayer = obj.INDEX;
         if (obj.INDEX === this.playerID) {
         	  //Tong
             this.endButton.setInteractive();
             this.endButton_interactive = true;
+            
+            //Tong 
+            this.currentPlayer = obj.INDEX;
+            this.add_turn_start_effect();
+            
+            //THEO ADDING
+            var diff_2 = obj.STONE.length - this.stone.length;
+            if(diff_2 !== 0){
+            	for(var i = 0; i < diff_2; i++){
+/*            		this.add_stone(obj.STONE[obj.STONE.length-1-i], obj.INDEX);
+*/            	}
+            }
             
             this.availableCards = obj.AVAILABLECARDS;
             this.stone = obj.STONE;
@@ -140,6 +165,7 @@ export class RoomScene extends Phaser.Scene {
             this.handcard = obj.HANDCARD;
             this.handsize = obj.HANDCARD.length; // Tong 
             // 	Tong: I also modify the function below!
+            // Tong: Note: This is the place where draw cards happen!
             if (diff > 0) {
                 var tempSprite = this.physics.add.sprite(1200, 633.4, this.handcard[this.handcard.length-diff]).setInteractive().setScale(this.basic_scale);
                 this.card_deck.push(tempSprite);
@@ -176,6 +202,7 @@ export class RoomScene extends Phaser.Scene {
             this.handcard = obj.SOURCE.HANDCARD;
             this.availableCards = [];
             //this.attackSource = obj.SOURCE;
+            
         }
         else if (obj.TARGET.INDEX === this.playerID) {
             this.availableCards = obj.TARGET.AVAILABLECARDS;
@@ -185,19 +212,49 @@ export class RoomScene extends Phaser.Scene {
             this.confirmButton.setInteractive();
             this.confirmButton_interactive = true;
             
-            console.log("Shoot, I am being attacked!")// Tong
+            //console.log("Shoot, I am being attacked!")// Tong
+            this.start_be_kill_effect(); // Tong
+        }
+        // Tong
+        else
+        {
+            this.start_kill_effect(obj.TARGET.INDEX);
+            var x = this.game.renderer.width/2;
+            var y = this.game.renderer.height/2;
+            var temp  = this.add.image(x,y,"ATTACK");
+            //console.log("In other player's perspective!!!")
+            temp.depth = 0;
+            this.fade_out_cards.push(temp);
+            this.fade_out_cards_scale.push(this.basic_scale);
+            this.time_marker = this.updateCount;
+            
         }
         this.players[obj.SOURCE.INDEX].handsize = obj.SOURCE.HANDCARD.length;
     }
 
-    parseTakeDamage(obj) {
-        if (obj.SOURCE.INDEX === this.playerID) {
+    parseTakeDamage(obj) 
+    {
+        if (obj.SOURCE.INDEX === this.playerID) 
+        {
             this.stone = obj.SOURCE.STONE;
             this.availableCards = obj.SOURCE.AVAILABLECARDS;
             this.endButton.setInteractive();
             this.endButton_interactive = true;
+            //Tong
+            if(obj.TARGET.BLOOD === this.players[obj.TARGET.INDEX].blood)
+        	{
+        		 var x = this.game.renderer.width/2;
+                 var y = this.game.renderer.height/2;
+                 var temp  = this.add.image(x,y,"DODGE");
+                 //console.log("In other player's perspective!!! DODGE")
+                 temp.depth = 0;
+                 this.fade_out_cards.push(temp);
+                 this.fade_out_cards_scale.push(this.basic_scale);
+                 this.time_marker = this.updateCount;
+        	}
         }
         else if (obj.TARGET.INDEX === this.playerID) {
+        	
             this.availableCards = [];
             this.handcard = obj.TARGET.HANDCARD;
             this.blood = obj.TARGET.BLOOD;
@@ -207,21 +264,58 @@ export class RoomScene extends Phaser.Scene {
             else {
                 this.gameEnd = true;
             }
+            // Here is the code for dead player
             if (obj.TARGET.ISDEAD === "FALSE") {
                 this.isDead = false;
             }
             else {
+            	//Tong: Note this is the place that a player dies, so also can get stone from here! The getter is the source player
             	this.stone = [];
                 this.isDead = true;
+                this.add_dead_effect(this.playerID);
             }
         }
-        if (obj.TARGET.ISDEAD === "TRUE") {
+        // Tong
+        else
+        {
+        	if(obj.TARGET.BLOOD === this.players[obj.TARGET.INDEX].blood)
+        	{
+        		 var x = this.game.renderer.width/2;
+                 var y = this.game.renderer.height/2;
+                 var temp  = this.add.image(x,y,"DODGE");
+                 //console.log("In other player's perspective!!! DODGE")
+                 temp.depth = 0;
+                 this.fade_out_cards.push(temp);
+                 this.fade_out_cards_scale.push(this.basic_scale);
+                 this.time_marker = this.updateCount;
+        	}
+        }
+        //Tong: Dead player modification
+        if (obj.TARGET.ISDEAD === "TRUE") 
+        {
             this.players[obj.TARGET.INDEX].isDead = true;
+            this.players[obj.TARGET.INDEX].stone = [];
+            this.add_dead_effect(obj.TARGET.INDEX);
         }
         this.players[obj.SOURCE.INDEX].stone = obj.SOURCE.STONE;
         this.players[obj.TARGET.INDEX].blood = obj.TARGET.BLOOD;
         this.players[obj.TARGET.INDEX].handsize = obj.TARGET.HANDCARD.length;
+        if (obj.TARGET.GAMEEND === "TRUE") {
+            var gameEndType;
+            if (this.blood > 0) {
+                gameEndType = "win";
+                this.success_sound.play();
+            }
+            
+            else {
+                gameEndType = "lose";
+                this.failure_sound.play();
+            }
+            	
+            window.location = "GameEndServlet?username=" + this.username + "&type=" + gameEndType;
+        }
     }
+    
 
     parseUndefeatable(obj) {
         if (obj.SOURCE.INDEX === this.playerID) {
@@ -235,16 +329,53 @@ export class RoomScene extends Phaser.Scene {
             this.stealSource = obj.SOURCE.INDEX; //Tong
             this.confirmButton.setInteractive();
             this.confirmButton_interactive = true;
-            console.log("Shoot, I am being stolen!");
+            //console.log("Shoot, I am being stolen!");
+            this.start_be_steal_effect();
+        }
+        // Tong 
+        else
+        {
+        	this.start_steal_effect(obj.TARGET.INDEX);
+        	 var x = this.game.renderer.width/2;
+             var y = this.game.renderer.height/2;
+             var temp  = this.add.image(x,y,"STEAL");
+             //console.log("In other player's perspective!!!  STEAL" )
+             temp.depth = 0;
+             this.fade_out_cards.push(temp);
+             this.fade_out_cards_scale.push(this.basic_scale);
+             this.time_marker = this.updateCount;
         }
         this.players[obj.SOURCE.INDEX].handsize = obj.SOURCE.HANDCARD.length;
     }
 
     parseChangeCard(obj) {
         if (obj.SOURCE.INDEX === this.playerID) {
+        	var tempHand = obj.SOURCE.HANDCARD;
+         	var tempStone = obj.SOURCE.STONE;
+        	if (tempHand.length === this.handcard.length&&tempStone.length===this.stone.length)
+         	{
+         		 var x = this.game.renderer.width/2;
+                 var y = this.game.renderer.height/2;
+                 var temp  = this.add.image(x,y,"UNDEFEATABLE");
+                 //console.log("In other player's perspective!!!  RESIST" )
+                 temp.depth = 0;
+                 this.fade_out_cards.push(temp);
+                 this.fade_out_cards_scale.push(this.basic_scale);
+                 this.time_marker = this.updateCount;
+         	}
+        	// Tong: Note this is the place where the stones are changed from one player to another
+        	var stoneDiff = obj.SOURCE.STONE.length - this.stone.length;
+        	if(stoneDiff>0)
+        	{
+            	for(var i = 0; i < stoneDiff; i++){
+/*            		this.add_stone(obj.SOURCE.STONE[obj.SOURCE.STONE.length-1-i], obj.SOURCE.INDEX);
+*/            	}
+        		// obj.SOURCE.STONE[obj.SOURCE.STONE.length] This gives the access to the stone being drawn
+        	}
             this.stone = obj.SOURCE.STONE;
             this.availableCards = obj.SOURCE.AVAILABLECARDS;
             this.handsize = obj.SOURCE.HANDCARD.length;
+            
 
             var diff = obj.SOURCE.HANDCARD.length - this.handcard.length;
             this.handcard = obj.SOURCE.HANDCARD;
@@ -253,8 +384,26 @@ export class RoomScene extends Phaser.Scene {
                 this.card_deck.push(tempSprite);
                 this.draw_card(1);
             }
+            // Tong
             this.endButton.setInteractive();
             this.endButton_interactive = true;
+        }
+        // Tong
+        else if(obj.TARGET.INDEX !== this.playerID)
+        {
+        	var tempHand = obj.SOURCE.HANDCARD;
+        	var tempStone = obj.SOURCE.STONE;
+        	if (tempHand.length === this.players[obj.SOURCE.INDEX].handsize&&tempStone.length===this.players[obj.SOURCE.INDEX].stone.length)
+        	{
+        		var x = this.game.renderer.width/2;
+                var y = this.game.renderer.height/2;
+                var temp  = this.add.image(x,y,"UNDEFEATABLE");
+                //console.log("In other player's perspective!!!  RESIST" )
+                temp.depth = 0;
+                this.fade_out_cards.push(temp);
+                this.fade_out_cards_scale.push(this.basic_scale);
+                this.time_marker = this.updateCount;
+        	}
         }
         else if (obj.TARGET.INDEX === this.playerID) {
             this.availableCards = [];
@@ -272,8 +421,10 @@ export class RoomScene extends Phaser.Scene {
                 this.removeCard(i);
                 this.handcard = tempHand;
             }
+            
             // BUG!!! We ignore the case that a player is dead
         }
+        
         this.players[obj.TARGET.INDEX].handsize = obj.TARGET.HANDCARD.length;
         this.players[obj.SOURCE.INDEX].handsize = obj.SOURCE.HANDCARD.length;
         this.players[obj.TARGET.INDEX].stone = obj.TARGET.STONE;
@@ -302,41 +453,66 @@ export class RoomScene extends Phaser.Scene {
         this.be_attacked_sound = this.sound.add("be_attacked");
     	this.attack_sound = this.sound.add("attack");
     	
-        this.be_attacked_sound.once('play', function(be_attacked_sound){
-    		self.bg_music.setVolume(0);
+        this.be_attacked_sound.on('play', function(be_attacked_sound){
+    		self.bg_music.setVolume(0.2);
     	});
-        this.be_attacked_sound.once('complete', function(be_attacked_sound){
+        this.be_attacked_sound.on('complete', function(be_attacked_sound){
         	self.bg_music.setVolume(1);
         });
-        this.attack_sound.once('play', function(attack_sound){
-        	self.bg_music.setVolume(0);
+        this.attack_sound.on('play', function(attack_sound){
+        	self.bg_music.setVolume(0.2);
     	});
-        this.attack_sound.once('complete', function(attack_sound){
+        this.attack_sound.on('complete', function(attack_sound){
         	self.bg_music.setVolume(1);
         });
         
         this.steal_sound = this.sound.add("steal_sound");
         this.be_stealed_sound = this.sound.add("be_stealed_sound");
-        this.be_stealed_sound.once('play', function(be_stealed_sound){
-    		self.bg_music.setVolume(0);
+        this.be_stealed_sound.on('play', function(be_stealed_sound){
+    		self.bg_music.setVolume(0.2);
     	});
-        this.be_stealed_sound.once('complete', function(be_stealed_sound){
+        this.be_stealed_sound.on('complete', function(be_stealed_sound){
         	self.bg_music.setVolume(1);
         });
-        this.steal_sound.once('play', function(steal_sound){
-        	self.bg_music.setVolume(0);
+        this.steal_sound.on('play', function(steal_sound){
+        	self.bg_music.setVolume(0.2);
     	});
-        this.steal_sound.once('complete', function(steal_sound){
+        this.steal_sound.on('complete', function(steal_sound){
         	self.bg_music.setVolume(1);
         });
         
         this.turn_start_sound = this.sound.add("turn_start");
-        this.turn_start_sound.once('play', function(turn_start){
-    		self.bg_music.setVolume(0);
+        this.turn_start_sound.on('play', function(turn_start){
+    		self.bg_music.setVolume(0.2);
     	});
-        this.turn_start_sound.once('complete', function(turn_start){
+        this.turn_start_sound.on('complete', function(turn_start){
         	self.bg_music.setVolume(1);
         });
+        
+        this.turn_end_sound = this.sound.add("turn_end");
+        this.turn_end_sound.on('play', function(turn_end){
+    		self.bg_music.setVolume(0.2);
+    	});
+        this.turn_start_sound.on('complete', function(tuen_end){
+        	self.bg_music.setVolume(1);
+        });
+        
+        this.success_sound = this.sound.add("success");
+        this.success_sound.on('play', function(turn_end){
+    		self.bg_music.setVolume(0.2);
+    	});
+        this.success_sound.on('complete', function(tuen_end){
+        	self.bg_music.setVolume(1);
+        });
+        
+        this.failure_sound = this.sound.add("failure");
+        this.failure_sound.on('play', function(turn_end){
+    		self.bg_music.setVolume(0.2);
+    	});
+        this.failure_sound.on('complete', function(tuen_end){
+        	self.bg_music.setVolume(1);
+        });
+        
         
     	//theo adding
     	this.my_camera = this.cameras.main;
@@ -425,7 +601,7 @@ export class RoomScene extends Phaser.Scene {
         this.basic_scale = 0.15;
         this.card_cover_scale = 1.6;
   
-        this.physics.add.sprite(1200 - 10, 633.4 - 10, "card_deck").setScale(this.card_cover_scale).depth = 30;
+        this.physics.add.sprite(1200 - 20, 633.4 - 10, "card_deck").setScale(this.card_cover_scale).depth = 30;
 
         var style = { font: "65px Arial", fill: "#ff0000", align: "center" };
         this.textValue = this.add.text(0, 0, "0", style);
@@ -452,8 +628,7 @@ export class RoomScene extends Phaser.Scene {
         	this.speed_endButton = 0.5;
         });
         this.endButton.on("pointerup", ()=>{
-        	//Theo testing
-        	this.test_num++;
+        	this.add_turn_end_effect();
         	
             var tempObj = {};
             tempObj.TYPE = "PLAYEREND";
@@ -471,7 +646,7 @@ export class RoomScene extends Phaser.Scene {
         this.fade_out_cards_scale = [];
         
         
-        // Adds confirm button
+        // Adds confirm button effect
         this.confirmButton = this.add.image(this.game.renderer.width - 116, this.game.renderer.height - 170, "confirm-button").setScale(0.42);
         this.confirmButton.setInteractive({ useHandCursor: true });
         this.confirmButton_interactive = true;
@@ -489,18 +664,16 @@ export class RoomScene extends Phaser.Scene {
         
 
         
-       	
-        
         //Tong: This function is modified heavily by me! Please double check!
         this.confirmButton.on("pointerup", ()=>{
         	/*this.add_turn_start_effect();*/
         	
-        	console.log(this.to_play_card);
+        	//console.log(this.to_play_card);
         	var index =  this.hand_cards_state.indexOf("to play");
-        	console.log(index);
+        	//console.log(index);
         	var tempObj = {};
         	//I am being attacked
-        	if(this.attackTarget==true)
+        	if(this.attackTarget===true)
         	{
         		tempObj.TYPE = "DODGE";
                 tempObj.GAMEID = this.roomID;
@@ -508,12 +681,9 @@ export class RoomScene extends Phaser.Scene {
                 tempObj.SOURCE = this.attackSource;
                 tempObj.TARGET = this.playerID;
         		this.attackTarget = false;
-        		
-        		//THEO ADDING
-        		this.start_be_kill_effect();
-
+        		 this.start_be_kill_effect();
         	}
-        	else if(this.stealTarget==true)
+        	else if(this.stealTarget===true)
         	{
         		tempObj.TYPE = "UNDEFEATABLE";
                 tempObj.GAMEID = this.roomID;
@@ -521,9 +691,7 @@ export class RoomScene extends Phaser.Scene {
                 tempObj.SOURCE = this.stealSource;
                 tempObj.TARGET = this.playerID;
         		this.stealTarget = false;
-        		
-        		//THEO ADDING
-        		this.start_be_steal_effect();
+        		 this.start_be_steal_effect();
         	}
         	else // Note: this is not dumb-user proof :D
         	{
@@ -608,9 +776,11 @@ export class RoomScene extends Phaser.Scene {
         if (this.playerID === 0) {
             tempObj.TYPE = "NEWGAME";
         }
-        else {
+        else 
+        {
             tempObj.TYPE = "CONNECTION";
         }
+   
         this.socket.send(JSON.stringify(tempObj));
         this.confirmButton.disableInteractive();
         this.confirmButton_interactive = false;
@@ -633,8 +803,14 @@ export class RoomScene extends Phaser.Scene {
     	this.turn_start_sound.play();
     }
     
+    add_turn_end_effect(){
+    	this.turn_end_pic = this.add.image(this.game.renderer.width/2, this.game.renderer.height/2, "turn_end").setScale(0.6);
+    	this.is_ending_turn = true;
+    	this.time_marker_end_turn = this.updateCount;
+    	this.turn_end_sound.play();
+    }
     
-
+    
     
     //please pass in the playerID of the player who is currently taking his/her turn. NO NEED TO CALL THIS FUNCTION MANUALLY.
     //please ask Theo for how to use this function.
@@ -642,36 +818,61 @@ export class RoomScene extends Phaser.Scene {
     	if(this.bulb_top && this.bulb_right && this.bulb_left){
     		//if I have not received any information yet, then playerID is set to -1 by default. So no bulbs should appear.
     		if(playerID === -1){
+    			//console.log("IN: 1" );
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = false;
+    			
+    			this.update_bulb_left = false;
+    			this.update_bulb_right = false;
+    			this.update_bulb_top = false;
     			return;
     		}
     		if(playerID === this.topID){
+    			//console.log("IN: 2" )
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = true;
+    			
+    			this.update_bulb_left = false;
+    			this.update_bulb_right = false;
+    			this.update_bulb_top = true;
     		}
     		else if(playerID === this.leftID){
+    			//console.log("IN: 3" )
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = true;
     			this.bulb_top.visible = false;
+    			
+    			this.update_bulb_left = true;
+    			this.update_bulb_right = false;
+    			this.update_bulb_top = false;
     		}
     		else if(playerID === this.rightID){
+    			//console.log("IN: 4" )
     			this.bulb_right.visible = true;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = false;
+
+    			this.update_bulb_left = false;
+    			this.update_bulb_right = true;
+    			this.update_bulb_top = false;
     		}
     		else if(playerID === this.playerID){
+    			//console.log("IN: 5" )
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = false;
+    			
+    			this.update_bulb_left = false;
+    			this.update_bulb_right = false;
+    			this.update_bulb_top = false;
     		}
     	}
     }
     
     //call this function if a player dies. ONLY FOR ADDING EFFECT. NO REAL EFFECT ON GAME LOGIC
-    add_dead_effect(ID){
+    add_dead_effect(targetID){
     	var target;
     	if(targetID === this.topID){
     		target = this.teammateT;
@@ -693,13 +894,15 @@ export class RoomScene extends Phaser.Scene {
     }
     
     setting_up_bulb(){
-    	var bulb_scale = 0.1;
+    	var bulb_scale = 0.4;
     	this.bulb_top = this.add.image(this.teammateT.x - 150, this.teammateT.y, "bulb").setScale(bulb_scale);
     	this.bulb_right = this.add.image(this.teammateR.x - 150, this.teammateR.y, "bulb").setScale(bulb_scale);
     	this.bulb_left = this.add.image(this.teammateL.x + 150, this.teammateL.y, "bulb").setScale(bulb_scale);
     	this.bulb_top.visible = false;
     	this.bulb_right.visible = false;
     	this.bulb_left.visible = false;
+    	//console.log("After setting up blub");
+    	//console.log(this.bulb_top);
     } 
     
     start_be_steal_effect(){
@@ -709,7 +912,7 @@ export class RoomScene extends Phaser.Scene {
     
     start_steal_effect(targetID){
     	this.steal_sound.play();
-    	this.steal_pic_scale = 0.6;
+    	this.steal_pic_scale = 0.1;
     	var target;
     	if(targetID === this.topID){
     		target = this.teammateT;
@@ -744,7 +947,6 @@ export class RoomScene extends Phaser.Scene {
     
     //THEO ADDING(
     start_kill_effect(targetID){
-      
     	this.attack_sound.play();
     	var target;
     	if(targetID === this.topID){
@@ -787,13 +989,6 @@ export class RoomScene extends Phaser.Scene {
     	}
     }
     
-   
-   
-
-    
-   
-    
-
     fade_camera(){
     	this.cameras.main.fadeIn(3500);
     }
@@ -867,7 +1062,7 @@ export class RoomScene extends Phaser.Scene {
         			this.fade_out_cards[i].destroy();
         			this.fade_out_cards.shift();
         			this.fade_out_cards_scale.shift();
-        			
+        			i--;
         		}
     		}
     	}
@@ -891,23 +1086,51 @@ export class RoomScene extends Phaser.Scene {
         else{
             alert("Something is going wrong in stone!!!");
         }
+        var to_detect_stone = [];
+        for(var i = 0; i < 6; i++){
+        	to_detect_stone.push(true);
+        }
+         
+
+        for(var i = 0; i < this.stones.length; i++){
+        	if(this.stones[i].texture.key === "time_stone"){
+        		to_detect_stone[0] = false;
+        	}
+        	else if(this.stones[i].texture.key === "space_stone"){
+        		to_detect_stone[1] = false;
+        	}
+        	else if(this.stones[i].texture.key === "power_stone"){
+        		to_detect_stone[2] = false;
+        	}
+        	else if(this.stones[i].texture.key === "reality_stone"){
+        		to_detect_stone[3] = false;
+        	}
+        	else if(this.stones[i].texture.key === "soul_stone"){
+        		to_detect_stone[4] = false;
+        	}
+        	else if(this.stones[i].texture.key === "mind_stone"){
+        		to_detect_stone[5] = false;
+        	}
+        }
+        
+        
         for(var i = 0; i < this.players[ID].stone.length; i++){
-            if(this.players[ID].stone[i] === "TimeStone"){
+            if(this.players[ID].stone[i] === "TimeStone" && to_detect_stone[0]){
                 stone_bar[0].setTexture("time_stone").setScale(this.stone_scale);
             }
-            else if(this.players[ID].stone[i] === "SpaceStone"){
+            else if(this.players[ID].stone[i] === "SpaceStone" && to_detect_stone[1]){
                 stone_bar[1].setTexture("space_stone").setScale(this.stone_scale);
             }
-            else if(this.players[ID].stone[i] === "PowerStone"){
+            else if(this.players[ID].stone[i] === "PowerStone" && to_detect_stone[2]){
                 stone_bar[2].setTexture("power_stone").setScale(this.stone_scale);
             }
-            else if(this.players[ID].stone[i] === "RealityStone"){
+            else if(this.players[ID].stone[i] === "RealityStone" && to_detect_stone[3]){
                 stone_bar[3].setTexture("reality_stone").setScale(this.stone_scale);
             }
-            else if(this.players[ID].stone[i] === "SoulStone"){
+            else if(this.players[ID].stone[i] === "SoulStone" && to_detect_stone[4]){
                 stone_bar[4].setTexture("soul_stone").setScale(this.stone_scale);
             }
-            else if(this.players[ID].stone[i] === "MindStone"){
+            else if(this.players[ID].stone[i] === "MindStone" && to_detect_stone[5]){
                 stone_bar[5].setTexture("mind_stone").setScale(this.stone_scale);
             }
         }
@@ -940,6 +1163,17 @@ export class RoomScene extends Phaser.Scene {
     //this function will never needed to be called
     update_stone(){
     	if(this.players[this.leftID] && this.players[this.rightID] && this.players[this.topID] && this.hero !== ""){
+    		for(var i = 0; i < 4; i++){
+    			//if I got more stones
+    			var diff = this.players[i].stone.length - this.stone_tracker[i];
+    			if(diff > 0){
+    				for(var j = 0; j < diff; j++){
+    					this.add_stone(this.players[i].stone[this.players[i].stone.length-1-j], i);
+    				}
+    			}
+    			this.stone_tracker[i] = this.players[i].stone.length;
+    		}
+    		
     		//clear the texture
     		for(var i = 1; i <= 6; i++){
     			this.left_stone_bar[i-1].setTexture("stone_" + i).setScale(this.stone_scale);
@@ -947,6 +1181,7 @@ export class RoomScene extends Phaser.Scene {
             	this.top_stone_bar[i-1].setTexture("stone_" + i).setScale(this.stone_scale);
             	this.my_stone_bar[i-1].setTexture("stone_" + i).setScale(this.stone_scale);
     		}
+    		
     		//setting the texture of the stone that the other 3 players really have
     		this.update_stone_of(this.leftID);
     		this.update_stone_of(this.rightID);
@@ -1092,6 +1327,101 @@ export class RoomScene extends Phaser.Scene {
     	this.teammateT.setScale(this.hero_base_scale);
     	this.teammateL.setScale(this.hero_base_scale);
     	this.teammateR.setScale(this.hero_base_scale);
+    }
+    
+    //remember to make it an array to prevent you add two stones at the same time!!! 
+    add_stone(stone_name, ID){
+    	var stone;
+    	if(stone_name === "TimeStone"){
+    		if(ID === this.leftID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.left_stone_bar[0].y, "time_stone").setScale(2);
+    		}
+    		else if(ID === this.rightID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.right_stone_bar[0].y, "time_stone").setScale(2);
+    		}
+    		else if(ID === this.topID){
+    			stone = this.physics.add.sprite(this.top_stone_bar[0].x, this.game.renderer.height/2, "time_stone").setScale(2);
+    		}
+    		else if(ID === this.playerID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.my_stone_bar[0].y, "time_stone").setScale(2);
+    		}
+    	}
+    	else if(stone_name === "SpaceStone"){
+    		if(ID === this.leftID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.left_stone_bar[1].y, "space_stone").setScale(2);
+    		}
+    		else if(ID === this.rightID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.right_stone_bar[1].y, "space_stone").setScale(2);
+    		}
+    		else if(ID === this.topID){
+    			stone = this.physics.add.sprite(this.top_stone_bar[0].x, this.game.renderer.height/2, "space_stone").setScale(2);
+    		}
+    		else if(ID === this.playerID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.my_stone_bar[1].y, "space_stone").setScale(2);
+    		}
+    	}
+    	else if(stone_name === "PowerStone"){
+    		if(ID === this.leftID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.left_stone_bar[2].y, "power_stone").setScale(2);
+    		}
+    		else if(ID === this.rightID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.right_stone_bar[2].y, "power_stone").setScale(2);
+    		}
+    		else if(ID === this.topID){
+    			stone = this.physics.add.sprite(this.top_stone_bar[0].x, this.game.renderer.height/2, "power_stone").setScale(2);
+    		}
+    		else if(ID === this.playerID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.my_stone_bar[2].y, "power_stone").setScale(2);
+    		}
+    	}
+    	else if(stone_name === "RealityStone"){
+    		if(ID === this.leftID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.left_stone_bar[3].y, "reality_stone").setScale(2);
+    		}
+    		else if(ID === this.rightID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.right_stone_bar[3].y, "reality_stone").setScale(2);
+    		}
+    		else if(ID === this.topID){
+    			stone = this.physics.add.sprite(this.top_stone_bar[0].x, this.game.renderer.height/2, "reality_stone").setScale(2);
+    		}
+    		else if(ID === this.playerID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.my_stone_bar[3].y, "reality_stone").setScale(2);
+    		}
+    	}
+    	else if(stone_name === "SoulStone"){
+    		if(ID === this.leftID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.left_stone_bar[4].y, "soul_stone").setScale(2);
+    		}
+    		else if(ID === this.rightID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.right_stone_bar[4].y, "soul_stone").setScale(2);
+    		}
+    		else if(ID === this.topID){
+    			stone = this.physics.add.sprite(this.top_stone_bar[0].x, this.game.renderer.height/2, "soul_stone").setScale(2);
+    		}
+    		else if(ID === this.playerID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.my_stone_bar[4].y, "soul_stone").setScale(2);
+    		}
+    	}
+    	else if(stone_name === "MindStone"){
+    		if(ID === this.leftID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.left_stone_bar[5].y, "mind_stone").setScale(2);
+    		}
+    		else if(ID === this.rightID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.right_stone_bar[5].y, "mind_stone").setScale(2);
+    		}
+    		else if(ID === this.topID){
+    			stone = this.physics.add.sprite(this.top_stone_bar[0].x, this.game.renderer.height/2, "mind_stone").setScale(2);
+    		}
+    		else if(ID === this.playerID){
+    			stone = this.physics.add.sprite(this.game.renderer.width/2, this.my_stone_bar[5].y, "mind_stone").setScale(2);
+    		}
+    	}
+    	stone.depth = 50;
+    	this.stones.push(stone);
+    	this.update_stone_scaling.push(true)
+       	this.update_stone_moving.push(false);
+       	this.stone_scale_marker.push(this.updateCount);
+   		this.stone_target_ID.push(ID);
     }
     
     draw_card(num){
@@ -1314,8 +1644,38 @@ export class RoomScene extends Phaser.Scene {
     	this.update_health();
     	this.update_stone();
     	
-    	//Theo ADDING
-    	this.update_bulb(this.test_num);
+    	
+    	//updating the light_bulb
+    	if(this.updateCount >= this.light_timer + 5){
+    		this.light_timer = this.updateCount;
+    		if(this.update_bulb_left){
+    			if(this.bulb_left.texture.key === "bulb"){
+    				this.bulb_left.setTexture("bulb2");
+    			}
+    			else{
+    				this.bulb_left.setTexture("bulb");
+    			}
+    		}
+    		else if(this.update_bulb_right){
+    			if(this.bulb_right.texture.key === "bulb"){
+    				this.bulb_right.setTexture("bulb2");
+    			}
+    			else{
+    				this.bulb_right.setTexture("bulb");
+    			}
+    		}
+    		else if(this.update_bulb_top){
+    			if(this.bulb_top.texture.key === "bulb"){
+    				this.bulb_top.setTexture("bulb2");
+    			}
+    			else{
+    				this.bulb_top.setTexture("bulb");
+    			}
+    		}
+    	}
+    	
+    	//Theo ADDING  // Tong modified
+    	this.update_bulb(this.currentPlayer);
     	if(this.to_update_be_killed){
     		if(this.updateCount >= this.time_marker_be_killed + 300){
             	this.temp_pic.destroy();
@@ -1340,10 +1700,10 @@ export class RoomScene extends Phaser.Scene {
           	if(this.start_rotating_endbutton){
           		this.endButton.angle += this.speed_endButton;
           		if(this.endButton.angle >= 45){
-          			this.speed = -0.5;
+          			this.speed_endButton = -0.5;
           		}
           		if(this.endButton.angle <= -45){
-          			this.speed = 0.5;
+          			this.speed_endButton = 0.5;
           		}
           	}
           }
@@ -1363,9 +1723,14 @@ export class RoomScene extends Phaser.Scene {
     	}
     	
 
-
+    	if(this.is_ending_turn){
+    		if(this.updateCount >= this.time_marker_end_turn + 300){
+    			this.turn_end_pic.destroy();
+    			this.is_ending_turn = false;
+    		}
+    	}
     	
-    	//THEO ADDING(
+    	
     	this.textValue.text = parseInt(this.updateCount++/60).toString();
     	
     	if(this.updateCount >= this.time_marker + 5){
@@ -1389,7 +1754,117 @@ export class RoomScene extends Phaser.Scene {
         	this.time_marker_kill = this.updateCount;
         }
         
-        //)
+        
+        
+ 
+        //THEO ADDING
+        for(var i = 0; i < this.stones.length; i++){
+        	if(this.update_stone_scaling[i]){
+       			if(this.updateCount >= this.stone_scale_marker[i] + 3){
+       				this.stones[i].setScale(this.stones[i].scaleX * 0.95, this.stones[i].scaleY* 0.95);
+       				if(this.stones[i].scaleX <= this.stone_scale * 1.2){
+       					this.stones[i].setScale(this.stone_scale);
+       					this.update_stone_scaling[i] = false;
+       					this.update_stone_moving[i] = true;
+       				}
+       				this.stone_scale_marker[i] = this.updateCount;
+       			}
+       		
+       		}
+       		else if(this.update_stone_moving[i]){
+       			if(this.stone_target_ID[i] === this.leftID){
+       				this.stones[i].body.setVelocityX(-400);
+       				if(this.stones[i].x <= this.left_stone_bar[0].x){
+       					this.stones[i].body.setVelocityX(0);
+       					this.stones[i].body.setVelocityY(0);
+       				/*	this.stones[i].x = this.left_stone_bar[0].x;*/
+       					this.stones[i].destroy();
+/*           				this.update_stone_scaling[i] = false;
+           				this.update_stone_moving[i] = false;*/
+           				
+       					this.update_stone_scaling.splice(i, 1);
+       					this.update_stone_moving.splice(i, 1);
+       					this.stones.splice(i, 1);
+       					this.stone_target_ID.splice(i, 1);
+       					this.stone_scale_marker.splice(i, 1);
+       					i--;
+       				}
+       			}
+       			else if(this.stone_target_ID[i] === this.rightID){
+       				this.stones[i].body.setVelocityX(400);
+       				if(this.stones[i].x >= this.right_stone_bar[0].x){
+       					this.stones[i].body.setVelocityX(0);
+       					this.stones[i].body.setVelocityY(0);
+/*       					this.stones[i].x = this.right_stone_bar[0].x;*/
+       					this.stones[i].destroy();
+/*           				this.update_stone_scaling[i] = false;
+           				this.update_stone_moving[i] = false;*/
+       					this.update_stone_scaling.splice(i, 1);
+       					this.update_stone_moving.splice(i, 1);
+       					this.stones.splice(i, 1);
+       					this.stone_target_ID.splice(i, 1);
+       					this.stone_scale_marker.splice(i, 1);
+       					i--;
+       				}
+       			}
+       			else if(this.stone_target_ID[i] === this.topID){
+       				this.stones[i].body.setVelocityY(-400);
+       				var y;
+       				if(this.stones[i].texture.key === "time_stone"){
+       	        		y = this.top_stone_bar[0].y;
+       	        	}
+       	        	else if(this.stones[i].texture.key === "space_stone"){
+       	        		y = this.top_stone_bar[1].y;
+       	        	}
+       	        	else if(this.stones[i].texture.key === "power_stone"){
+       	        		y = this.top_stone_bar[2].y;
+       	        	}
+       	        	else if(this.stones[i].texture.key === "reality_stone"){
+       	        		y = this.top_stone_bar[3].y;
+       	        	}
+       	        	else if(this.stones[i].texture.key === "soul_stone"){
+       	        		y = this.top_stone_bar[4].y;
+       	        	}
+       	        	else if(this.stones[i].texture.key === "mind_stone"){
+       	        		y = this.top_stone_bar[5].y;
+       	        	}
+       				if(this.stones[i].y <= y){
+       					this.stones[i].body.setVelocityX(0);
+       					this.stones[i].body.setVelocityY(0);
+       					/*this.stones[i].y = y;*/
+       					this.stones[i].destroy();
+/*           				this.update_stone_scaling[i] = false;
+           				this.update_stone_moving[i] = false;*/
+       					this.update_stone_scaling.splice(i, 1);
+       					this.update_stone_moving.splice(i, 1);
+       					this.stones.splice(i, 1);
+       					this.stone_target_ID.splice(i, 1);
+       					this.stone_scale_marker.splice(i, 1);
+       					i--;
+       				}
+       			}
+       			else if(this.stone_target_ID[i] === this.playerID){
+       				this.stones[i].body.setVelocityX(-400);
+       				if(this.stones[i].x <= this.my_stone_bar[0].x){
+       					this.stones[i].body.setVelocityX(0);
+       					this.stones[i].body.setVelocityY(0);
+       			/*		this.stones[i].x = this.my_stone_bar[0].x;*/
+       					this.stones[i].destroy();
+/*           				this.update_stone_scaling[i] = false;
+           				this.update_stone_moving[i] = false;*/
+       					this.update_stone_scaling.splice(i, 1);
+       					this.update_stone_moving.splice(i, 1);
+       					this.stones.splice(i, 1);
+       					this.stone_target_ID.splice(i, 1);
+       					this.stone_scale_marker.splice(i, 1);
+       					i--;
+       				}
+       			}
+       			
+       		}
+        }
+        
+        
 
         if (this.isLoaded) {
             this.loadHeroPics();
