@@ -33,6 +33,9 @@
 				}
 				return true;
 			}
+			function redirect() {
+				window.location = "roomSelect.jsp?guest=true";
+			}
 		</script>		
 	</head>
 	
@@ -53,7 +56,7 @@
 				    <br />
 					<button>Login</button>
 				</form>		
-			<button id="guest-button">Play as guest</button>
+			<button id="guest-button" onclick="redirect()">Play as guest</button>
 			</div>
 		</div>
 	</body>

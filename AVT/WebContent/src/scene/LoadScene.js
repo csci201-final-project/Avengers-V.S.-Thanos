@@ -21,8 +21,8 @@ export class LoadScene extends Phaser.Scene {
     	this.load.image("turn_start", "./assets/turn_start.jpg");
     	this.load.audio("attack", "./assets/Sounds/attack.wav");
     	this.load.audio("be_attacked", "./assets/Sounds/be_attacked.wav");
-    	this.load.audio("steal_sound", "./assets/Sounds/steal_sound.wav");
-    	this.load.audio("be_stealed_sound", "./assets/Sounds/be_stealed.wav");
+    	this.load.audio("steal_sound", "./assets/Sounds/steal.wav");
+    	this.load.audio("be_stealed_sound", "./assets/Sounds/be_stolen.wav");
     	this.load.audio("turn_start", "./assets/Sounds/turn_start.wav");
         // creates loading bar
         this.load.image("background", "./assets/titan-bg.png");

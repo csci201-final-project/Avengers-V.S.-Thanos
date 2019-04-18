@@ -37,8 +37,9 @@ public class DirectServlet extends HttpServlet {
 		
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/FinalProject?user=root&password=" + PASSWORD + "&useSSL=false" + "&serverTimezone=UTC"); 
+
 			synchronized (conn) {
-				conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/FinalProject?user=root&password=" + PASSWORD + "&useSSL=false" + "&serverTimezone=UTC"); 
 				ps = conn.prepareStatement("SELECT * FROM Game WHERE realGameID = ?" );
 				ps.setInt(1,gameID);
 				rs = ps.executeQuery();

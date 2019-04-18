@@ -12,10 +12,15 @@
 		</style>
 		<%
 			String username = request.getParameter("username");
+			String isGuest = request.getParameter("guest");
 		%>
 		<script>
 			function validate() {
 				var gameID = document.myform.gameID.value;
+				if (gameID == null || gameID.length == 0) {
+					document.getElementById("error").innerHTML = "Invalid room ID";
+					return false;
+				}
 				
 				var xhttp = new XMLHttpRequest();
 				xhttp.open("GET", "DirectServlet?gameID=" + gameID, true);
@@ -31,7 +36,6 @@
 							document.myform.action = "./game-room.html?gameID=" + gameID + "&playerID=" + playerID + "&username=" + username;
 							document.myform.method = "GET";
 							document.myform.submit(); 
-							/* window.location.href = "./game-room.html?gameID=" + gameID + "&playerID=" + playerID + "&username=" + username; */
 							alert("here3");
 						}
 						if (playerID.length > 3) {
@@ -39,9 +43,6 @@
 							alert("here1");
 						}
 						else{
-/* 							document.myform.action = "./game-room.html?gameID=" + gameID + "&playerID=" + playerID + "&username=" + username;
-							document.myform.method = "GET";
-							document.myform.submit(); */
 							window.location.href = "./game-room.html?gameID=" + gameID + "&playerID=" + playerID + "&username=" + username;
 							alert("here2");
 						}
@@ -59,12 +60,29 @@
 		<div class="background"></div>
 		<div class="center-text">
 			<div class="form-div">
+				<%
+				System.out.println(isGuest);
+				if (isGuest == null || isGuest.length() == 0) {
+				%>
 				<form class="form" method="GET" name="myform" onSubmit="return validate()">
 					Enter Game Room ID:<br />
 					<input type="text" name="gameID" class="input-box" placeholder="Game ID"><br />
 					<div id="error">&nbsp;</div>
 					<button class="button" type="submit" name="submit">TO BATTLE!</button>
 				</form>
+				<%
+				}
+				else {
+				%>
+				<form class="form" method="GET" name="myform" action="guest.jsp">
+					Enter Game Room ID:<br />
+					<input type="text" name="gameID" class="input-box" placeholder="Game ID"><br />
+					<div id="error">&nbsp;</div>
+					<button class="button" type="submit" name="submit">TO BATTLE!</button>
+				</form>
+				<%
+				}
+				%>
 			</div>
 		</div>
 	</body>

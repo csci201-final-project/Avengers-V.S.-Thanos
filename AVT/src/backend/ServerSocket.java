@@ -52,15 +52,25 @@ public class ServerSocket {
         	{
         		if(gameVector.get(i).getGameID()==gameID)
         		{
-        			//System.out.println(gameID);
-        			//System.out.println(i);
         			gameVector.get(i).addSessions(session);
         			gameVector.get(i).addPlayer(username);
         			break;
         		}
         	}
         }
-        
+        else if (type.contentEquals("GUEST"))
+        {
+        	int gameID = obj.getInt("GAMEID");
+        	for(int i=0;i<gameVector.size();i++)
+        	{
+        		if(gameVector.get(i).getGameID()==gameID)
+        		{
+        			gameVector.get(i).addSessions(session);
+        			gameVector.get(i).addGuest();
+        			break;
+        		}
+        	}
+        }
 		else 
 		{
 			int gameID = obj.getInt("GAMEID");
@@ -68,7 +78,6 @@ public class ServerSocket {
         	{
         		if(gameVector.get(i).getGameID()==gameID)
         		{
-        			System.out.println("Here!");
         			System.out.println(message);
         			gameVector.get(i).play(message);
         			break;

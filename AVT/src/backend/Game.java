@@ -116,7 +116,7 @@ public class Game {
 		// shuffle the cards and Heros, create a random Thanos number
 		Collections.shuffle(heros);
 		Collections.shuffle(allCards);
-		ThanosID =  ThreadLocalRandom.current().nextInt(0, 4);
+		ThanosID =  0;
 		
 	}
 	
@@ -143,7 +143,7 @@ public class Game {
 			}
 		}
 		allCards.add(new Stone("PowerStone"));
-		allCards.add(new Stone("SoulStone"));
+		//allCards.add(new Stone("SoulStone"));
 		allCards.add(new Stone("TimeStone"));
 		allCards.add(new Stone("MindStone"));
 		allCards.add(new Stone("RealityStone"));
@@ -233,9 +233,9 @@ public class Game {
 		}
 	}
 	
-	public void addGuest(Guest g)
+	public void addGuest()
 	{
-		this.allGuests.add(g);
+		this.allGuests.add(new Guest());
 	}
 	
 	

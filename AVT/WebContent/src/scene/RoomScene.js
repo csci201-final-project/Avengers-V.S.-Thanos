@@ -16,7 +16,7 @@ export class RoomScene extends Phaser.Scene {
         this.playerID = parseInt(get("playerID"));
         // this.username = get("username");
         this.username = get("username")
-        console.log(this.playerID);
+        //console.log(this.playerID);
 
         // Initializes member variables
         this.isThanos = false;
@@ -127,10 +127,10 @@ export class RoomScene extends Phaser.Scene {
         this.isLoaded = true;
         
         //Tong: Last revision
-        this.confirmButton.disableInteractive();
-        this.confirmButton_interactive = false;
-        this.endButton.disableInteractive();
-        this.endButton_interactive = false;
+//        this.confirmButton.disableInteractive();
+//        this.confirmButton_interactive = false;
+//        this.endButton.disableInteractive();
+//        this.endButton_interactive = false;
     }
 
     parseTurnStart(obj) {
@@ -152,6 +152,7 @@ export class RoomScene extends Phaser.Scene {
             this.handcard = obj.HANDCARD;
             this.handsize = obj.HANDCARD.length; // Tong 
             // 	Tong: I also modify the function below!
+            // Tong: Note: This is the place where draw cards happen!
             if (diff > 0) {
                 var tempSprite = this.physics.add.sprite(1200, 633.4, this.handcard[this.handcard.length-diff]).setInteractive().setScale(this.basic_scale);
                 this.card_deck.push(tempSprite);
@@ -198,7 +199,7 @@ export class RoomScene extends Phaser.Scene {
             this.confirmButton.setInteractive();
             this.confirmButton_interactive = true;
             
-            console.log("Shoot, I am being attacked!")// Tong
+            //console.log("Shoot, I am being attacked!")// Tong
             this.start_be_kill_effect(); // Tong
         }
         // Tong
@@ -208,7 +209,7 @@ export class RoomScene extends Phaser.Scene {
             var x = this.game.renderer.width/2;
             var y = this.game.renderer.height/2;
             var temp  = this.add.image(x,y,"ATTACK");
-            console.log("In other player's perspective!!!")
+            //console.log("In other player's perspective!!!")
             temp.depth = 0;
             this.fade_out_cards.push(temp);
             this.fade_out_cards_scale.push(this.basic_scale);
@@ -218,8 +219,10 @@ export class RoomScene extends Phaser.Scene {
         this.players[obj.SOURCE.INDEX].handsize = obj.SOURCE.HANDCARD.length;
     }
 
-    parseTakeDamage(obj) {
-        if (obj.SOURCE.INDEX === this.playerID) {
+    parseTakeDamage(obj) 
+    {
+        if (obj.SOURCE.INDEX === this.playerID) 
+        {
             this.stone = obj.SOURCE.STONE;
             this.availableCards = obj.SOURCE.AVAILABLECARDS;
             this.endButton.setInteractive();
@@ -230,7 +233,7 @@ export class RoomScene extends Phaser.Scene {
         		 var x = this.game.renderer.width/2;
                  var y = this.game.renderer.height/2;
                  var temp  = this.add.image(x,y,"DODGE");
-                 console.log("In other player's perspective!!! DODGE")
+                 //console.log("In other player's perspective!!! DODGE")
                  temp.depth = 0;
                  this.fade_out_cards.push(temp);
                  this.fade_out_cards_scale.push(this.basic_scale);
@@ -238,6 +241,7 @@ export class RoomScene extends Phaser.Scene {
         	}
         }
         else if (obj.TARGET.INDEX === this.playerID) {
+        	
             this.availableCards = [];
             this.handcard = obj.TARGET.HANDCARD;
             this.blood = obj.TARGET.BLOOD;
@@ -247,10 +251,12 @@ export class RoomScene extends Phaser.Scene {
             else {
                 this.gameEnd = true;
             }
+            // Here is the code for dead player
             if (obj.TARGET.ISDEAD === "FALSE") {
                 this.isDead = false;
             }
             else {
+            	//Tong: Note this is the place that a player dies, so also can get stone from here! The getter is the source player
             	this.stone = [];
                 this.isDead = true;
             }
@@ -263,17 +269,23 @@ export class RoomScene extends Phaser.Scene {
         		 var x = this.game.renderer.width/2;
                  var y = this.game.renderer.height/2;
                  var temp  = this.add.image(x,y,"DODGE");
-                 console.log("In other player's perspective!!! DODGE")
+                 //console.log("In other player's perspective!!! DODGE")
                  temp.depth = 0;
                  this.fade_out_cards.push(temp);
                  this.fade_out_cards_scale.push(this.basic_scale);
                  this.time_marker = this.updateCount;
         	}
         }
-        if (obj.TARGET.ISDEAD === "TRUE") {
+        //Tong: Dead player modification
+        if (obj.TARGET.ISDEAD === "TRUE") 
+        {
             this.players[obj.TARGET.INDEX].isDead = true;
+            this.players[obj.TARGET.INDEX].stone = [];
+            
         }
-
+        this.players[obj.SOURCE.INDEX].stone = obj.SOURCE.STONE;
+        this.players[obj.TARGET.INDEX].blood = obj.TARGET.BLOOD;
+        this.players[obj.TARGET.INDEX].handsize = obj.TARGET.HANDCARD.length;
         if (obj.TARGET.GAMEEND === "TRUE") {
             var gameEndType;
             if (this.blood > 0) {
@@ -284,10 +296,8 @@ export class RoomScene extends Phaser.Scene {
             }
             window.location = "GameEndServlet?username=" + this.username + "&type=" + gameEndType;
         }
-        this.players[obj.SOURCE.INDEX].stone = obj.SOURCE.STONE;
-        this.players[obj.TARGET.INDEX].blood = obj.TARGET.BLOOD;
-        this.players[obj.TARGET.INDEX].handsize = obj.TARGET.HANDCARD.length;
     }
+    
 
     parseUndefeatable(obj) {
         if (obj.SOURCE.INDEX === this.playerID) {
@@ -301,7 +311,7 @@ export class RoomScene extends Phaser.Scene {
             this.stealSource = obj.SOURCE.INDEX; //Tong
             this.confirmButton.setInteractive();
             this.confirmButton_interactive = true;
-            console.log("Shoot, I am being stolen!");
+            //console.log("Shoot, I am being stolen!");
             this.start_be_steal_effect();
         }
         // Tong 
@@ -311,7 +321,7 @@ export class RoomScene extends Phaser.Scene {
         	 var x = this.game.renderer.width/2;
              var y = this.game.renderer.height/2;
              var temp  = this.add.image(x,y,"STEAL");
-             console.log("In other player's perspective!!!  STEAL" )
+             //console.log("In other player's perspective!!!  STEAL" )
              temp.depth = 0;
              this.fade_out_cards.push(temp);
              this.fade_out_cards_scale.push(this.basic_scale);
@@ -322,9 +332,30 @@ export class RoomScene extends Phaser.Scene {
 
     parseChangeCard(obj) {
         if (obj.SOURCE.INDEX === this.playerID) {
+        	var tempHand = obj.SOURCE.HANDCARD;
+         	var tempStone = obj.SOURCE.STONE;
+        	if (tempHand.length === this.handcard.length&&tempStone.length===this.stone.length)
+         	{
+          
+         		var x = this.game.renderer.width/2;
+                 var y = this.game.renderer.height/2;
+                 var temp  = this.add.image(x,y,"UNDEFEATABLE");
+                 //console.log("In other player's perspective!!!  RESIST" )
+                 temp.depth = 0;
+                 this.fade_out_cards.push(temp);
+                 this.fade_out_cards_scale.push(this.basic_scale);
+                 this.time_marker = this.updateCount;
+         	}
+        	// Tong: Note this is the place where the stones are changed from one player to another
+        	var stoneDiff = obj.SOURCE.STONE.length - this.stone.length;
+        	if(stoneDiff>0)
+        	{
+        		// obj.SOURCE.STONE[obj.SOURCE.STONE.length] This gives the access to the stone being drawn
+        	}
             this.stone = obj.SOURCE.STONE;
             this.availableCards = obj.SOURCE.AVAILABLECARDS;
             this.handsize = obj.SOURCE.HANDCARD.length;
+            
 
             var diff = obj.SOURCE.HANDCARD.length - this.handcard.length;
             this.handcard = obj.SOURCE.HANDCARD;
@@ -333,32 +364,23 @@ export class RoomScene extends Phaser.Scene {
                 this.card_deck.push(tempSprite);
                 this.draw_card(1);
             }
+            // Tong
+            this.confirmButton.disableInteractive();
+            this.confirmButton_interactive = false;
             this.endButton.setInteractive();
             this.endButton_interactive = true;
-            if (tempHand.length === this.players[obj.SOURCE.INDEX].handsize&&tempStone.length===this.players[obj.SOURCE.INDEX].stone.length)
-        	{
-        		var x = this.game.renderer.width/2;
-                var y = this.game.renderer.height/2;
-                var temp  = this.add.image(x,y,"UNDEFEATABLE");
-                console.log("In other player's perspective!!!  RESIST" )
-                temp.depth = 0;
-                this.fade_out_cards.push(temp);
-                this.fade_out_cards_scale.push(this.basic_scale);
-                this.time_marker = this.updateCount;
-        	}
         }
         // Tong
         else if(obj.TARGET.INDEX !== this.playerID)
         {
         	var tempHand = obj.SOURCE.HANDCARD;
-            var tempStone = obj.SOURCE.STONE;
-            
-        	if (tempHand.length === this.players[obj.SOURCE.INDEX].handsize && tempStone.length===this.players[obj.SOURCE.INDEX].stone.length)
+        	var tempStone = obj.SOURCE.STONE;
+        	if (tempHand.length === this.players[obj.SOURCE.INDEX].handsize&&tempStone.length===this.players[obj.SOURCE.INDEX].stone.length)
         	{
         		var x = this.game.renderer.width/2;
                 var y = this.game.renderer.height/2;
                 var temp  = this.add.image(x,y,"UNDEFEATABLE");
-                console.log("In other player's perspective!!!  RESIST" )
+                //console.log("In other player's perspective!!!  RESIST" )
                 temp.depth = 0;
                 this.fade_out_cards.push(temp);
                 this.fade_out_cards_scale.push(this.basic_scale);
@@ -381,6 +403,7 @@ export class RoomScene extends Phaser.Scene {
                 this.removeCard(i);
                 this.handcard = tempHand;
             }
+            
             // BUG!!! We ignore the case that a player is dead
         }
         
@@ -605,9 +628,9 @@ export class RoomScene extends Phaser.Scene {
         this.confirmButton.on("pointerup", ()=>{
         	/*this.add_turn_start_effect();*/
         	
-        	console.log(this.to_play_card);
+        	//console.log(this.to_play_card);
         	var index =  this.hand_cards_state.indexOf("to play");
-        	console.log(index);
+        	//console.log(index);
         	var tempObj = {};
         	//I am being attacked
         	if(this.attackTarget==true)
@@ -633,7 +656,7 @@ export class RoomScene extends Phaser.Scene {
         		this.stealTarget = false;
         		
         		//THEO ADDING
-        		this.start_be_steal_effect();
+        		//this.start_be_steal_effect();
         	}
         	else // Note: this is not dumb-user proof :D
         	{
@@ -648,7 +671,7 @@ export class RoomScene extends Phaser.Scene {
                         tempObj.CARD = index;
                         tempObj.TARGET = this.targetID;
                         tempObj.SOURCE = this.playerID;
-                        this.start_steal_effect(this.targetID);
+                        //this.start_steal_effect(this.targetID);
                     }
                     else 
                     {
@@ -659,7 +682,7 @@ export class RoomScene extends Phaser.Scene {
                         tempObj.TARGET = this.targetID;
                         
                         //THEO ADDING
-                        this.start_kill_effect(this.targetID);
+                        //this.start_kill_effect(this.targetID);
                     }
                     
                 }
@@ -686,6 +709,7 @@ export class RoomScene extends Phaser.Scene {
             tempObj.GAMEID = this.roomID;
             this.socket.send(JSON.stringify(tempObj));
         });
+
 
         //creating the empty_stones
         this.stone_scale = 0.35;
@@ -718,9 +742,11 @@ export class RoomScene extends Phaser.Scene {
         if (this.playerID === 0) {
             tempObj.TYPE = "NEWGAME";
         }
-        else {
+        else 
+        {
             tempObj.TYPE = "CONNECTION";
         }
+   
         this.socket.send(JSON.stringify(tempObj));
         this.confirmButton.disableInteractive();
         this.confirmButton_interactive = false;
@@ -750,36 +776,36 @@ export class RoomScene extends Phaser.Scene {
     //please ask Theo for how to use this function.
     update_bulb(playerID){
     	if(this.bulb_top && this.bulb_right && this.bulb_left){
-    		// console.log("In update_bulb");
-    		// console.log(playerID);
+    		//console.log("In update_bulb");
+    		//console.log(playerID);
     		//if I have not received any information yet, then playerID is set to -1 by default. So no bulbs should appear.
     		if(playerID === -1){
-    			// console.log("IN: 1" );
+    			//console.log("IN: 1" );
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = false;
     			return;
     		}
     		if(playerID === this.topID){
-    			// console.log("IN: 2" )
+    			//console.log("IN: 2" )
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = true;
     		}
     		else if(playerID === this.leftID){
-    			// console.log("IN: 3" )
+    			//console.log("IN: 3" )
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = true;
     			this.bulb_top.visible = false;
     		}
     		else if(playerID === this.rightID){
-    			// console.log("IN: 4" )
+    			//console.log("IN: 4" )
     			this.bulb_right.visible = true;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = false;
     		}
     		else if(playerID === this.playerID){
-    			// console.log("IN: 5" )
+    			//console.log("IN: 5" )
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = false;
@@ -817,8 +843,8 @@ export class RoomScene extends Phaser.Scene {
     	this.bulb_top.visible = false;
     	this.bulb_right.visible = false;
     	this.bulb_left.visible = false;
-    	console.log("After setting up blub");
-    	console.log(this.bulb_top);
+    	//console.log("After setting up blub");
+    	//console.log(this.bulb_top);
     } 
     
     start_be_steal_effect(){
@@ -1431,8 +1457,7 @@ export class RoomScene extends Phaser.Scene {
         this.update_current_hand_size();
     	this.update_available_cards();
     	this.update_health();
-        this.update_stone();
-        
+    	this.update_stone();
     	
     	//Theo ADDING  // Tong modified
     	this.update_bulb(this.currentPlayer);
@@ -1456,17 +1481,17 @@ export class RoomScene extends Phaser.Scene {
          	}
          }
     	 
-    	if(this.endButton){
-            if(this.start_rotating_endbutton){
-                this.endButton.angle += this.speed_endButton;
-                if(this.endButton.angle >= 45){
-                    this.speed_endButton = -0.5;
-                }
-                if(this.endButton.angle <= -45){
-                    this.speed_endButton = 0.5;
-                }
-            }
-        }
+    	 if(this.endButton){
+          	if(this.start_rotating_endbutton){
+          		this.endButton.angle += this.speed_endButton;
+          		if(this.endButton.angle >= 45){
+          			this.speed_endButton = -0.5;
+          		}
+          		if(this.endButton.angle <= -45){
+          			this.speed_endButton = 0.5;
+          		}
+          	}
+          }
     	
     	if(this.is_stealing){
     		if(this.updateCount >= this.time_marker_steal + 300){
@@ -1481,6 +1506,8 @@ export class RoomScene extends Phaser.Scene {
     			this.is_starting_turn = false;
             }
     	}
+    	
+
 
     	
     	//THEO ADDING(
@@ -1507,6 +1534,8 @@ export class RoomScene extends Phaser.Scene {
         	this.time_marker_kill = this.updateCount;
         }
         
+        //)
+
         if (this.isLoaded) {
             this.loadHeroPics();
             this.isLoaded = false;
@@ -1536,6 +1565,6 @@ export class RoomScene extends Phaser.Scene {
                  	 }
         		}
         	}
-        }
+    	}
     }
 }

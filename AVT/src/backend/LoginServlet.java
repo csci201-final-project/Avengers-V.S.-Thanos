@@ -46,10 +46,9 @@ public class LoginServlet extends HttpServlet {
 		
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
-						
+			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/FinalProject?user=root&password=" + PASSWORD + "&useSSL=false" + "&serverTimezone=UTC"); 
+	
 			synchronized (conn) {
-				conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/FinalProject?user=root&password=" + PASSWORD + "&serverTimezone=UTC");  // location 1
-
 				if (type.contentEquals("login")) {
 					ps = conn.prepareStatement("SELECT * FROM User WHERE username=?");
 					ps.setString(1, username);
