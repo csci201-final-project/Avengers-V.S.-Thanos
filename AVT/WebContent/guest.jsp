@@ -33,7 +33,7 @@
             this.socket.onmessage = function(event) {
                 console.log("Msg received: ", event.data);
 
-                document.getElementById("scrollable").innerHTML += JSON.stringify(event.data) + "\n";
+                document.getElementById("scrollable").innerHTML += JSON.stringify(event.data) + "<br />";
             }
             this.socket.onclose = function(event) {
                 console.log("Connection lost.");
@@ -46,8 +46,7 @@
             <a href="roomSelect.jsp">Choose another game</a>
         </div>
         <h1>JSON Monitor for "Avengers v.s. Thanos"</h1>
-        <div id="scrollable">
-            Empty.
-        </div>
+        <pre id="scrollable">
+        </pre>
     </body>
 </html>

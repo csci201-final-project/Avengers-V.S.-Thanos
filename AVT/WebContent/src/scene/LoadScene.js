@@ -18,7 +18,7 @@ export class LoadScene extends Phaser.Scene {
     	this.load.image("cross", "./assets/cross.png");
     	this.load.image("steal_effect", "./assets/steal_effect.png");
     	this.load.image("bulb", "./assets/bulb.png");
-    	this.load.image("turn_start", "./assets/turn_start.jpg");
+    	this.load.image("turn_start", "./assets/turn_start.png");
     	this.load.audio("attack", "./assets/Sounds/attack.wav");
     	this.load.audio("be_attacked", "./assets/Sounds/be_attacked.wav");
     	this.load.audio("steal_sound", "./assets/Sounds/steal.wav");

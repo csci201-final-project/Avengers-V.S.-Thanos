@@ -13,12 +13,9 @@
         <%
         	String username = (String) session.getAttribute("username");
         	String gameEndType = (String) session.getAttribute("gameEndType");
-        	String win = (String) session.getAttribute("win");
-        	String lose = (String) session.getAttribute("lose");
-        	String totalGame = (String) session.getAttribute("totalGame");
-        	
-        	// DEBUG
-        	gameEndType = "win";
+        	int win = (int) session.getAttribute("win");
+        	int lose = (int) session.getAttribute("lose");
+        	int totalGame = (int) session.getAttribute("totalGame");
         %>
         <script>
             function displayProfile() {

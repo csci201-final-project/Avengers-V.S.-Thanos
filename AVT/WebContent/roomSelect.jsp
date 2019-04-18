@@ -30,21 +30,19 @@
 						var playerID = this.responseText;
 						// Checks if room is full
 						var username = "<%= username %>";
-						alert("playerID: " + playerID);
-						alert("username: " + username);
-						if(playerID === "1"){
+						if (playerID === "1" && username !== null) {
 							document.myform.action = "./game-room.html?gameID=" + gameID + "&playerID=" + playerID + "&username=" + username;
 							document.myform.method = "GET";
 							document.myform.submit(); 
-							alert("here3");
 						}
 						if (playerID.length > 3) {
-							document.getElementById("error").innerHTML = "Room is already full";
-							alert("here1");
+							document.getElementById("error").innerHTML = "Room is already full.";
+						}
+						else if (username === null) {
+							document.getElementById("error").innerHTML = "Not logged in.";
 						}
 						else{
 							window.location.href = "./game-room.html?gameID=" + gameID + "&playerID=" + playerID + "&username=" + username;
-							alert("here2");
 						}
 					}
 					
@@ -53,6 +51,12 @@
 				xhttp.send();
 					
 				return false;
+			}
+			function checkEmpty() {
+				if (document.myform.gameID.value.length == 0)
+					return false;
+				else
+					return true;
 			}
 		</script>
 	</head>
@@ -74,7 +78,7 @@
 				}
 				else {
 				%>
-				<form class="form" method="GET" name="myform" action="guest.jsp">
+				<form class="form" method="GET" name="myform" action="guest.jsp" onSubmit="return checkEmpty()">
 					Enter Game Room ID:<br />
 					<input type="text" name="gameID" class="input-box" placeholder="Game ID"><br />
 					<div id="error">&nbsp;</div>

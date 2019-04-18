@@ -558,7 +558,7 @@ export class RoomScene extends Phaser.Scene {
         this.basic_scale = 0.15;
         this.card_cover_scale = 1.6;
   
-        this.physics.add.sprite(1200 - 10, 633.4 - 10, "card_deck").setScale(this.card_cover_scale).depth = 30;
+        this.physics.add.sprite(1200 - 20, 633.4 - 10, "card_deck").setScale(this.card_cover_scale).depth = 30;
 
         var style = { font: "65px Arial", fill: "#ff0000", align: "center" };
         this.textValue = this.add.text(0, 0, "0", style);
@@ -571,7 +571,7 @@ export class RoomScene extends Phaser.Scene {
         
         
         // Adds end turn button
-        this.endButton = this.add.image(this.game.renderer.width - 114, this.game.renderer.height - 100, "end_turn").setScale(0.425);
+        this.endButton = this.add.image(this.game.renderer.width - 120, this.game.renderer.height - 100, "end_turn").setScale(0.425);
         this.endButton.depth = 30;
         this.endButton.setInteractive({ useHandCursor: true });
         this.endButton_interactive = true;
@@ -605,7 +605,7 @@ export class RoomScene extends Phaser.Scene {
         
         
         // Adds confirm button effect
-        this.confirmButton = this.add.image(this.game.renderer.width - 116, this.game.renderer.height - 170, "confirm-button").setScale(0.42);
+        this.confirmButton = this.add.image(this.game.renderer.width - 120, this.game.renderer.height - 170, "confirm-button").setScale(0.42);
         this.confirmButton.setInteractive({ useHandCursor: true });
         this.confirmButton_interactive = true;
         this.confirmButton.depth = 30;
@@ -701,7 +701,7 @@ export class RoomScene extends Phaser.Scene {
         	this.endButton_interactive = false;
         });
       
-        this.startButton = this.add.image(this.game.renderer.width/2 - 30, this.game.renderer.height/2 - 50, "start-btn");
+        this.startButton = this.add.image(this.game.renderer.width/2 - 20, this.game.renderer.height/2 - 50, "start-btn");
         this.startButton.setInteractive({ useHandCursor: true });
         this.startButton.once("pointerup", ()=>{
             var tempObj = {};
@@ -854,7 +854,7 @@ export class RoomScene extends Phaser.Scene {
     
     start_steal_effect(targetID){
     	this.steal_sound.play();
-    	this.steal_pic_scale = 0.6;
+    	this.steal_pic_scale = 0.2;
     	var target;
     	if(targetID === this.topID){
     		target = this.teammateT;

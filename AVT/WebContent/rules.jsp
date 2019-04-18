@@ -31,36 +31,36 @@
 		
 		<div style="padding-left:16px">
 		  <div class = "board">
-		  <pre>
-			AVENGER VS. THANOS
-1. Each Player is randomly assigned a character to start with.
+		  <p>
+			<h2>AVENGER VS. THANOS</h2><br />
+<strong>1. Each Player is randomly assigned a character to start with.</strong><br /><br />
 	
-2. Player has initial attack and blood values. 
+<strong>2. Player has initial attack and blood values.</strong> <br /><br />
 
-3.There are four kinds of cards: 
-	Attack: attack an assigned player (only one attack is allowed at each turn. 
-	Dodge: counter the effect of Attack.
-	Steal: Steals the stone of the targeted player by default, if no stones equipped, steal a random card. 
-	Resist: counters the effect of Steal.
-Attack and Steal can be used actively while Dodge and Resist passively. 
+<strong>3.There are four kinds of cards:</strong> <br />
+	Attack: attack an assigned player (only one attack is allowed at each turn. <br />
+	Dodge: counter the effect of Attack.<br />
+	Steal: Steals the stone of the targeted player by default, if no stones equipped, steal a random card. <br />
+	Resist: counters the effect of Steal.<br />
+Attack and Steal can be used actively while Dodge and Resist passively. <br /><br />
 
-4. There are six kinds of stones:
+<strong>4. There are six kinds of stones:</strong><br />
 	 
-	Time Stone: Attack cards can be stored and used in one turn.
-	Space Stone:  50% to dodge an attack.
+	Time Stone: Attack cards can be stored and used in one turn.<br />
+	Space Stone:  50% to dodge an attack.<br />
 	
-	Power Stone: Doubles damages dealt by you
+	Power Stone: Doubles damages dealt by you<br />
 
-	Reality Stone: Draw one more card at each turn. 
+	Reality Stone: Draw one more card at each turn. <br />
 	
-	Soul Stone: Dodge and Attack cards can be used 	interchangeably.
+	Soul Stone: Dodge and Attack cards can be used 	interchangeably.<br />
 	
-	Mind Stone: All damages reduced by one.
+	Mind Stone: All damages reduced by one.<br /><br />
 	
-5. Each player take turns to draw and play with cards.
+<strong>5. Each player take turns to draw and play with cards.</strong><br /><br />
 
-6. Thanos wins if he kills all the heroes while heroes win if the Thanos is dead.
-			</pre>
+<strong>6. Thanos wins if he kills all the heroes while heroes win if the Thanos is dead.</strong><br />
+			</p>
 		  </div>
 		</div>
 	</body>

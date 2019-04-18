@@ -90,7 +90,7 @@ public class GameEndServlet extends HttpServlet {
 				System.out.println("sqle closing stuff: " + sqle.getMessage());
 			}
 		}
-		RequestDispatcher dispatch = getServletContext().getRequestDispatcher("./result.jsp");
+		RequestDispatcher dispatch = getServletContext().getRequestDispatcher("/result.jsp");
 		dispatch.forward(request, response);
 	}
 
