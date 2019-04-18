@@ -17,13 +17,20 @@ export class LoadScene extends Phaser.Scene {
     	//THEO ADDING
     	this.load.image("cross", "./assets/cross.png");
     	this.load.image("steal_effect", "./assets/steal_effect.png");
-    	this.load.image("bulb", "./assets/bulb.png");
+    	this.load.image("bulb", "./assets/light-bulb-dark.png");
+    	this.load.image("bulb2", "./assets/light-bulb-glow.png");
     	this.load.image("turn_start", "./assets/turn_start.png");
+    	this.load.image("turn_end", "./assets/endturn-btn.png");
     	this.load.audio("attack", "./assets/Sounds/attack.wav");
     	this.load.audio("be_attacked", "./assets/Sounds/be_attacked.wav");
-    	this.load.audio("steal_sound", "./assets/Sounds/steal.wav");
-    	this.load.audio("be_stealed_sound", "./assets/Sounds/be_stolen.wav");
+    	this.load.audio("steal_sound", "./assets/Sounds/steal_sound.wav");
+    	this.load.audio("be_stealed_sound", "./assets/Sounds/be_stealed.wav");
     	this.load.audio("turn_start", "./assets/Sounds/turn_start.wav");
+    	this.load.audio("turn_end", "./assets/Sounds/turn_end.ogg");
+        this.load.audio("before_start", "./assets/Sounds/before_start.mp3");
+        this.load.audio("bg_music", "./assets/Sounds/bg_music.mp3");
+        this.load.audio("failure", "./assets/Sounds/failure.wav");
+        this.load.audio("success", "./assets/Sounds/success.wav");
         // creates loading bar
         this.load.image("background", "./assets/titan-bg.png");
         this.load.image("confirm-button", "./assets/confirm-btn.png");
@@ -132,7 +139,7 @@ export class LoadScene extends Phaser.Scene {
         assetText.setOrigin(0.5, 0.5);
    
         //needed to be commented back. THEO ADDING
-       for (var i = 0; i < 500; i++) {
+       /*for (var i = 0; i < 500; i++) {
            this.load.image('IMAGE_'+i, 'assets/zenvalogo.png');
        }
        for (var i = 0; i < 500; i++) {
@@ -143,9 +150,8 @@ export class LoadScene extends Phaser.Scene {
        }
        for (var i = 0; i < 500; i++) {
            this.load.image('SOUND_'+i, 'assets/zenvalogo.png');
-       }
-        this.load.audio("before_start", "./assets/Sounds/before_start.mp3");
-        this.load.audio("bg_music", "./assets/Sounds/bg_music.mp3");
+       }*/
+
 
         this.load.on('progress', function (value) {
         	var time = parseInt(value * 100-1);
