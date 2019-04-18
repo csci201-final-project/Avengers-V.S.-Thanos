@@ -31,7 +31,7 @@
 		
 		<div style="padding-left:16px">
 		  <div class = "board">
-		  	here!!!
+			
 		  </div>
 		</div>
 	</body>

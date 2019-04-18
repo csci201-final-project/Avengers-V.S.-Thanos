@@ -19,6 +19,7 @@ import javax.servlet.http.HttpSession;
 public class GameEndServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static final String PASSWORD = "165683466";
+	private Connection conn;
 
 	public GameEndServlet() {
         super();
@@ -30,13 +31,15 @@ public class GameEndServlet extends HttpServlet {
 		HttpSession session = request.getSession();
 		session.setAttribute("gameEndType", type);
 		
-		Connection conn = null;
+		conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/FinalProject?user=root&password=" + PASSWORD + "&serverTimezone=UTC");  // location 1
+			
+			synchronized (conn) {
+				conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/FinalProject?user=root&password=" + PASSWORD + "&serverTimezone=UTC");  // location 1
 			
 				ps = conn.prepareStatement("SELECT * FROM User WHERE username=?");
 				ps.setString(1, username);
@@ -71,6 +74,7 @@ public class GameEndServlet extends HttpServlet {
 				} else {
 					System.out.println("GAMEEND ERROR: user does not exist!");
 				}
+			}
 		} catch (SQLException sqle) {
 			System.out.println("sqle: " + sqle.getMessage());
 		} catch (ClassNotFoundException cnfe) {

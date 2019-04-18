@@ -60,6 +60,7 @@
 			    	<br />
 				<button>Register</button>
 				</form>
+				<button id="guest-button">Play as guest</button>
 			</div>
 		</div>
 		

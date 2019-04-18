@@ -750,36 +750,36 @@ export class RoomScene extends Phaser.Scene {
     //please ask Theo for how to use this function.
     update_bulb(playerID){
     	if(this.bulb_top && this.bulb_right && this.bulb_left){
-    		console.log("In update_bulb");
-    		console.log(playerID);
+    		// console.log("In update_bulb");
+    		// console.log(playerID);
     		//if I have not received any information yet, then playerID is set to -1 by default. So no bulbs should appear.
     		if(playerID === -1){
-    			console.log("IN: 1" );
+    			// console.log("IN: 1" );
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = false;
     			return;
     		}
     		if(playerID === this.topID){
-    			console.log("IN: 2" )
+    			// console.log("IN: 2" )
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = true;
     		}
     		else if(playerID === this.leftID){
-    			console.log("IN: 3" )
+    			// console.log("IN: 3" )
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = true;
     			this.bulb_top.visible = false;
     		}
     		else if(playerID === this.rightID){
-    			console.log("IN: 4" )
+    			// console.log("IN: 4" )
     			this.bulb_right.visible = true;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = false;
     		}
     		else if(playerID === this.playerID){
-    			console.log("IN: 5" )
+    			// console.log("IN: 5" )
     			this.bulb_right.visible = false;
     			this.bulb_left.visible = false;
     			this.bulb_top.visible = false;
@@ -1456,17 +1456,17 @@ export class RoomScene extends Phaser.Scene {
          	}
          }
     	 
-    	 if(this.endButton){
-          	if(this.start_rotating_endbutton){
-          		this.endButton.angle += this.speed_endButton;
-          		if(this.endButton.angle >= 45){
-          			this.speed = -0.5;
-          		}
-          		if(this.endButton.angle <= -45){
-          			this.speed = 0.5;
-          		}
-          	}
-          }
+    	if(this.endButton){
+            if(this.start_rotating_endbutton){
+                this.endButton.angle += this.speed_endButton;
+                if(this.endButton.angle >= 45){
+                    this.speed_endButton = -0.5;
+                }
+                if(this.endButton.angle <= -45){
+                    this.speed_endButton = 0.5;
+                }
+            }
+        }
     	
     	if(this.is_stealing){
     		if(this.updateCount >= this.time_marker_steal + 300){
@@ -1481,8 +1481,6 @@ export class RoomScene extends Phaser.Scene {
     			this.is_starting_turn = false;
             }
     	}
-    	
-
 
     	
     	//THEO ADDING(
@@ -1509,8 +1507,6 @@ export class RoomScene extends Phaser.Scene {
         	this.time_marker_kill = this.updateCount;
         }
         
-        //)
-
         if (this.isLoaded) {
             this.loadHeroPics();
             this.isLoaded = false;

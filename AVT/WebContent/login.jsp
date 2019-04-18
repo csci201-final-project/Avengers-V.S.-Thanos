@@ -13,7 +13,9 @@
 			
 		
 		</style>
-		
+		<%
+			session.setAttribute("username", "");
+		%>
 		<script>
 			function validate() {
 				var xhttp = new XMLHttpRequest();
@@ -45,12 +47,13 @@
 		 	<div class="form animated flipInX">
 			  <h2>Welcome To The Avengers</h2>
 			  <form name="myform" method="POST" action="./roomSelect.jsp" onSubmit="return validate()">
-			    <input placeholder="Username" type="text" name="username"></input>
-			    <input placeholder="Password" type="password" name="password"></input>
-			    <div id="error" style="text-align:center;">&nbsp</div>
-			    <br />
-			<button>Login</button>
-			</form>
+				    <input placeholder="Username" type="text" name="username"></input>
+				    <input placeholder="Password" type="password" name="password"></input>
+				    <div id="error" style="text-align:center;">&nbsp;</div>
+				    <br />
+					<button>Login</button>
+				</form>		
+			<button id="guest-button">Play as guest</button>
 			</div>
 		</div>
 	</body>

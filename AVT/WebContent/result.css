@@ -5,29 +5,41 @@ html,body {
 }
 body {
     overflow: hidden;
+    background: #44c4e7 url('./assets/background-blue.jpg') no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+   background-size: 100% 94%;
+   background-position: bottom;
 }
 
-.background {
+
+
+/* .background {
     z-index: -10;
     background-image: url('./assets/background-blue.jpg');
     
-    /* Add the blur effect */
+    Add the blur effect
     filter: blur(5px);
     -webkit-filter: blur(5px);
     
-    /* Full height */
+    Full height
     height: 100%;
     width: 100%;
     
-    /* Center and scale the image nicely */
+    Center and scale the image nicely
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
     transform: scale(1.1);
-}
+} */
 
 .center-text {
-	font-family: Avenir Next;
+	font-family: "Impact";
     /* color: rgb(223, 114, 12); */
     color: #fb6542;
 	font-size: 40px;
@@ -41,7 +53,7 @@ body {
 	text-align: center;
 }
 
-#button {
+.button {
 	border-radius: 24px;
 	cursor: pointer;
 	padding: 8px 30px;
@@ -50,8 +62,8 @@ body {
 	background: #3f681c;
 }
 
-#button :hover {
-    background: red;
+.button:hover {
+    background: #192b0b;
 }
 
 h2 {
@@ -60,5 +72,5 @@ h2 {
 }
 
 #profile {
-    color: #ffbb00;
+    color: #fb6542;
 }

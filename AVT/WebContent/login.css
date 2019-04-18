@@ -93,3 +93,11 @@ body {
 #error {
 	color: red;
 }
+
+#guest-button {
+	background: #1789a8;
+}
+
+#guest-button:hover {
+  background: #1c6275;
+}
